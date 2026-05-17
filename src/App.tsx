@@ -154,17 +154,10 @@ export default function App() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setIsSubmitting(true);
-
-    if (validate()) {
-      // Simulate API call
-      setTimeout(() => {
-        alert("Registration successful! Welcome to Future Football Stars.");
-        setIsSubmitting(false);
-      }, 1000);
-    } else {
+    
+    if (!validate()) {
       setIsSubmitting(false);
       // Scroll to first error
       const firstError = Object.keys(errors)[0];
@@ -172,6 +165,34 @@ export default function App() {
       if (element) {
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await fetch("/api/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || "Registration failed");
+      }
+
+      alert("Registration successful! Your details have been sent to our team.");
+      // Reset form if needed, or redirect
+      // setFormData({...initialState});
+    } catch (error: any) {
+      console.error("Registration error:", error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -192,9 +213,7 @@ export default function App() {
               <a href="#register" className="text-[10px] font-bold uppercase tracking-widest text-brand-red border-b-2 border-brand-red py-5">Register</a>
             </div>
           </div>
-          <a href="#" className="text-[10px] font-bold uppercase text-gray-400 hover:text-brand-red flex items-center transition-colors">
-            <ChevronLeft size={14} className="mr-1" /> Back to Login
-          </a>
+
         </nav>
 
           {/* Hero Section - Background image only */}
