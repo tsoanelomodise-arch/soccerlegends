@@ -1,0 +1,45 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=Space+Grotesk:wght@500;700&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+
+  --color-brand-red: #e03c31;
+  --color-brand-red-hover: #b82f25;
+  --color-field-green: #273a27;
+  --color-field-green-dark: #1a261a;
+  --color-field-green-light: #ebf0eb;
+  --color-border-muted: #e5e7eb;
+  --color-text-main: #2a332a;
+}
+
+@layer base {
+  body {
+    @apply bg-field-green-light text-text-main font-sans antialiased;
+  }
+}
+
+@layer components {
+  /* Artistic Inputs */
+  .artistic-input {
+    @apply border-b border-gray-300 py-2 bg-transparent focus:border-brand-red outline-none text-sm w-full transition-colors placeholder:text-gray-300;
+  }
+
+  .artistic-label {
+    @apply text-[10px] font-bold uppercase text-gray-400 mb-1 tracking-wider;
+  }
+
+  /* Artistic Buttons */
+  .btn-artistic-primary {
+    @apply px-10 py-3 bg-brand-red text-white text-[10px] uppercase font-black tracking-widest shadow-xl shadow-red-500/20 transition-all hover:bg-brand-red-hover active:scale-95;
+  }
+
+  .btn-artistic-outline {
+    @apply px-6 py-2 border border-[#2a332a] text-[#2a332a] text-[10px] uppercase font-black transition-all hover:bg-[#2a332a] hover:text-white active:scale-95;
+  }
+
+  .btn-artistic-muted {
+    @apply px-6 py-2 border border-gray-300 text-gray-400 text-[10px] uppercase font-black transition-all hover:border-gray-400 hover:text-gray-500 active:scale-95;
+  }
+}

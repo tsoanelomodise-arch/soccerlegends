@@ -1,0 +1,8 @@
+{
+  "name": "Future Football Stars",
+  "description": "Professional development program committed to identifying, nurturing, and advancing soccer talent in South Africa.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
