@@ -836,6 +836,36 @@ export default function App() {
 
             {/* Form Actions */}
             <div className="mt-16 flex flex-col md:flex-row justify-end items-center gap-8">
+              <button
+                type="button"
+                onClick={() => {
+                  setFormData({
+                    title: "Mr.",
+                    firstName: "Test",
+                    surname: "User",
+                    email: "tsoanelomodise@gmail.com",
+                    identification: "TEST-ID-12345",
+                    cellphone: "0123456789",
+                    doctorName: "Dr. Smith",
+                    doctorContact: "0987654321",
+                    nextOfKin: "Emergency Contact",
+                    socialConsent: "Yes, I consent to untagged photography",
+                    comments: "Auto-generated test record",
+                    agreeTerms: true,
+                    playerName: "Junior Legend",
+                    playerDob: "2010-05-20",
+                    playerPosition: "Forward",
+                    playerSkillLevel: "Intermediate",
+                    playerImage: null,
+                    goals: "5",
+                    assists: "3",
+                    minutesPlayed: "240",
+                  });
+                }}
+                className="text-xs text-gray-400 hover:text-brand-red transition-colors font-bold uppercase tracking-wider cursor-pointer"
+              >
+                Load Test Data
+              </button>
               <button 
                 type="submit" 
                 form="register"
