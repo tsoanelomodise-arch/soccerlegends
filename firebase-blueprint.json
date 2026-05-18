@@ -1,0 +1,38 @@
+{
+  "entities": {
+    "Registration": {
+      "title": "Registration",
+      "description": "Academy registration record for a player and their guardian.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "firstName": { "type": "string" },
+        "surname": { "type": "string" },
+        "email": { "type": "string", "format": "email" },
+        "identification": { "type": "string" },
+        "cellphone": { "type": "string" },
+        "doctorName": { "type": "string" },
+        "doctorContact": { "type": "string" },
+        "nextOfKin": { "type": "string" },
+        "socialConsent": { "type": "string" },
+        "comments": { "type": "string" },
+        "playerName": { "type": "string" },
+        "playerDob": { "type": "string", "format": "date" },
+        "playerPosition": { "type": "string" },
+        "playerSkillLevel": { "type": "string" },
+        "playerImage": { "type": "string", "description": "Base64 encoded image data" },
+        "goals": { "type": "string" },
+        "assists": { "type": "string" },
+        "minutesPlayed": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["firstName", "surname", "identification", "cellphone", "playerName", "playerDob"]
+    }
+  },
+  "firestore": {
+    "/registrations/{registrationId}": {
+      "schema": "Registration",
+      "description": "Collection of all academy registrations."
+    }
+  }
+}

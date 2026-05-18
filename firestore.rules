@@ -1,0 +1,41 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function isValidRegistration(data) {
+      let requiredFields = ['firstName', 'surname', 'identification', 'cellphone', 'doctorName', 'doctorContact', 'nextOfKin', 'socialConsent', 'playerName', 'playerDob', 'playerPosition', 'playerSkillLevel', 'createdAt'];
+      return data.keys().hasAll(requiredFields)
+        && data.firstName is string && data.firstName.size() > 0 && data.firstName.size() <= 100
+        && data.surname is string && data.surname.size() > 0 && data.surname.size() <= 100
+        && (data.email == null || (data.email is string && data.email.size() <= 200))
+        && data.identification is string && data.identification.size() > 0 && data.identification.size() <= 50
+        && data.cellphone is string && data.cellphone.size() > 0 && data.cellphone.size() <= 20
+        && data.playerName is string && data.playerName.size() > 0 && data.playerName.size() <= 200
+        && data.playerDob is string && data.playerDob.size() > 0
+        && data.createdAt == request.time;
+    }
+
+    match /registrations/{registrationId} {
+      allow create: if isValidId(registrationId) && isValidRegistration(incoming());
+      // No public read/update/delete for security
+      allow read, update, delete: if false;
+    }
+  }
+}

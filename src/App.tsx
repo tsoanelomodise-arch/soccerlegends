@@ -11,6 +11,24 @@ import {
   Upload
 } from "lucide-react";
 import { useState, ChangeEvent, FormEvent } from "react";
+import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { db } from "./lib/firebase";
+import emailjs from "@emailjs/browser";
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+}
 
 interface FormData {
   title: string;
@@ -165,6 +183,16 @@ export default function App() {
     return Object.keys(newErrors).length === 0;
   };
 
+  const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
+    const errInfo: FirestoreErrorInfo = {
+      error: error instanceof Error ? error.message : String(error),
+      operationType,
+      path
+    };
+    console.error('Firestore Error: ', JSON.stringify(errInfo));
+    throw new Error(errInfo.error);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
@@ -182,36 +210,94 @@ export default function App() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const path = 'registrations';
+      const dataToSave = {
+        title: formData.title,
+        firstName: formData.firstName,
+        surname: formData.surname,
+        email: noEmail ? null : formData.email,
+        identification: formData.identification,
+        cellphone: formData.cellphone,
+        doctorName: formData.doctorName,
+        doctorContact: formData.doctorContact,
+        nextOfKin: formData.nextOfKin,
+        socialConsent: formData.socialConsent,
+        comments: formData.comments,
+        playerName: formData.playerName,
+        playerDob: formData.playerDob,
+        playerPosition: formData.playerPosition,
+        playerSkillLevel: formData.playerSkillLevel,
+        playerImage: formData.playerImage,
+        goals: formData.goals || "0",
+        assists: formData.assists || "0",
+        minutesPlayed: formData.minutesPlayed || "0",
+        createdAt: serverTimestamp()
+      };
 
-      let result;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        result = await response.json();
-      } else {
-        const text = await response.text();
-        if (response.status === 404) {
-          throw new Error("The registration backend was not found at this location (404). Please ensure the Node.js server is running on your CPanel and configured correctly.");
+      await addDoc(collection(db, path), dataToSave);
+
+      // Send Email via EmailJS
+      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
+      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
+      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+
+      if (serviceId && templateId && publicKey) {
+        try {
+          await emailjs.send(
+            serviceId,
+            templateId,
+            {
+              to_name: "Legends Academy Admin",
+              from_name: `${formData.firstName} ${formData.surname}`,
+              player_name: formData.playerName,
+              parent_email: formData.email || "N/A",
+              parent_phone: formData.cellphone,
+              player_dob: formData.playerDob,
+              position: formData.playerPosition,
+              skill_level: formData.playerSkillLevel,
+              medical_doctor: `${formData.doctorName} (${formData.doctorContact})`,
+              next_of_kin: formData.nextOfKin,
+              comments: formData.comments || "None",
+              player_image: formData.playerImage ? "Photo included in database" : "No photo provided"
+            },
+            publicKey
+          );
+        } catch (emailError) {
+          console.error("Email notification failed to send:", emailError);
+          // We don't alert here because the registration was already saved to DB
         }
-        throw new Error(text.substring(0, 100) + "...");
       }
 
-      if (!response.ok) {
-        throw new Error(result.error || `Registration failed with status ${response.status}`);
-      }
-
-      alert("Registration successful! Your details have been sent to our team.");
-      // Reset form if needed, or redirect
-      // setFormData({...initialState});
+      alert("Registration successful! Your details have been saved to our database and our team has been notified.");
+      
+      // Reset form
+      setFormData({
+        title: "Mr.",
+        firstName: "",
+        surname: "",
+        email: "",
+        identification: "",
+        cellphone: "",
+        doctorName: "",
+        doctorContact: "",
+        nextOfKin: "",
+        socialConsent: "Yes, I consent to untagged photography",
+        comments: "",
+        agreeTerms: false,
+        playerName: "",
+        playerDob: "",
+        playerPosition: "Midfielder",
+        playerSkillLevel: "Beginner",
+        playerImage: null,
+        goals: "",
+        assists: "",
+        minutesPlayed: "",
+      });
+      setNoEmail(false);
+      setUsePassport(false);
     } catch (error: any) {
       console.error("Registration error:", error);
-      alert(`Error: ${error.message}`);
+      handleFirestoreError(error, OperationType.CREATE, 'registrations');
     } finally {
       setIsSubmitting(false);
     }
