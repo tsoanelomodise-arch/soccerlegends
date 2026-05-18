@@ -1,0 +1,15 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Forward /api requests to the Node.js server if it's running
+  # This is a guestimate for CPanel passenger setup, often it's automatic 
+  # but some setups need explicit proxying if Node is on a port.
+  # However, common SPA routing is definitely needed:
+  
+  RewriteRule ^index\.html$ - [L]
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_FILENAME} !-l
+  RewriteRule . /index.html [L]
+</IfModule>

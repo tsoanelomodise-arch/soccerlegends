@@ -182,7 +182,7 @@ export default function App() {
     setIsSubmitting(true);
 
     try {
-      const response = await fetch("/api/register", {
+      const response = await fetch("api/register", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -196,7 +196,10 @@ export default function App() {
         result = await response.json();
       } else {
         const text = await response.text();
-        throw new Error(text || "Server returned an invalid response");
+        if (response.status === 404) {
+          throw new Error("The registration backend was not found at this location (404). Please ensure the Node.js server is running on your CPanel and configured correctly.");
+        }
+        throw new Error(text.substring(0, 100) + "...");
       }
 
       if (!response.ok) {
