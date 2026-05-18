@@ -190,10 +190,17 @@ export default function App() {
         body: JSON.stringify(formData),
       });
 
-      const result = await response.json();
+      let result;
+      const contentType = response.headers.get("content-type");
+      if (contentType && contentType.includes("application/json")) {
+        result = await response.json();
+      } else {
+        const text = await response.text();
+        throw new Error(text || "Server returned an invalid response");
+      }
 
       if (!response.ok) {
-        throw new Error(result.error || "Registration failed");
+        throw new Error(result.error || `Registration failed with status ${response.status}`);
       }
 
       alert("Registration successful! Your details have been sent to our team.");
@@ -214,13 +221,11 @@ export default function App() {
         <nav className="h-24 border-b border-gray-100 px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-12">
             <div className="flex items-center gap-3">
-              <img src="https://socceracademy.wonderlandstudio.co.za/images/Logo_clear_background.png" alt="Legends Academy Logo" className="h-20 w-20 object-contain" referrerPolicy="no-referrer" />
+              <img src="/images/logo.png" alt="Legends Academy Logo" className="h-20 w-20 object-contain" />
               <div className="flex flex-col">
                 <span className="text-[11px] font-black tracking-tight text-text-main leading-tight">LEGENDS</span>
                 <span className="text-[8px] font-bold text-gray-400 tracking-[0.2em] uppercase leading-tight">Academy</span>
               </div>
-            </div>
-            <div className="flex space-x-8">
             </div>
           </div>
 
@@ -230,7 +235,7 @@ export default function App() {
         <section className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-center shrink-0">
           <div 
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('http://socceracademy.wonderlandstudio.co.za/images/background.png')" }}
+            style={{ backgroundImage: "url('/images/background.png')" }}
           />
           
           {/* Graphical elements matching the image */}

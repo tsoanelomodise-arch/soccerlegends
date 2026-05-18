@@ -23,8 +23,9 @@ async function startServer() {
   const app = express();
   const PORT = 3000;
 
-  // Use express.json() to parse JSON bodies
-  app.use(express.json());
+  // Use express.json() to parse JSON bodies with a larger limit
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
   // API routes
   app.post("/api/register", async (req, res) => {
