@@ -224,7 +224,7 @@ export default function App() {
         <nav className="h-24 border-b border-gray-100 px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-12">
             <div className="flex items-center gap-3">
-              <img src="https://images.unsplash.com/photo-1522778119026-d647f0596c20?w=200&q=80" alt="Legends Academy Logo" className="h-20 w-20 object-cover rounded-full border-2 border-brand-red shadow-sm" />
+              <img src="images/logo.png" alt="Legends Academy Logo" className="h-20 w-20 object-contain" />
               <div className="flex flex-col">
                 <span className="text-[11px] font-black tracking-tight text-text-main leading-tight">LEGENDS</span>
                 <span className="text-[8px] font-bold text-gray-400 tracking-[0.2em] uppercase leading-tight">Academy</span>
@@ -238,7 +238,7 @@ export default function App() {
         <section className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-center shrink-0">
           <div 
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?q=80&w=2000&auto=format&fit=crop')" }}
+            style={{ backgroundImage: "url('images/background.png')" }}
           />
           
           {/* Graphical elements matching the image */}
