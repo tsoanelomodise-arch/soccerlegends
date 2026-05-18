@@ -45,7 +45,7 @@ async function startServer() {
         subject: `New Registration: ${playerName} (${firstName} ${surname})`,
         html: `
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
-            <h1 style="color: #e11d48; border-bottom: 2px solid #e11d48; padding-bottom: 10px;">New Academy Registration</h1>
+            <h1 style="color: #e11d48; border-bottom: 2px solid #e11d48; padding-bottom: 10px;">New Registration</h1>
             
             ${playerImage ? `<div style="text-align: center; margin-bottom: 20px;"><img src="${playerImage}" alt="Player Photo" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #eee;" /></div>` : ''}
 
