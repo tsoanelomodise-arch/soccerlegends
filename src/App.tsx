@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Check,
-  ChevronLeft,
   ArrowRight,
   AlertCircle,
   Facebook,
@@ -69,6 +68,18 @@ export default function App() {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const calculateAge = (dob: string) => {
+    if (!dob) return null;
+    const birthDate = new Date(dob);
+    const today = new Date();
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const m = today.getMonth() - birthDate.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return age >= 0 ? age : 0;
+  };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
     const { name, value, type } = e.target;
@@ -210,7 +221,6 @@ export default function App() {
               </div>
             </div>
             <div className="flex space-x-8">
-              <a href="#register" className="text-[10px] font-bold uppercase tracking-widest text-brand-red border-b-2 border-brand-red py-5">Register</a>
             </div>
           </div>
 
@@ -624,7 +634,14 @@ export default function App() {
               </div>
 
               <div className="flex flex-col">
-                <label className="artistic-label">Date of Birth</label>
+                <div className="flex justify-between items-end">
+                  <label className="artistic-label">Date of Birth</label>
+                  {formData.playerDob && (
+                    <span className="text-[10px] font-black text-brand-red uppercase tracking-[0.2em] mb-1">
+                      Age: {calculateAge(formData.playerDob)}
+                    </span>
+                  )}
+                </div>
                 <input 
                   type="date" 
                   name="playerDob"
@@ -724,11 +741,7 @@ export default function App() {
             </form>
 
             {/* Form Actions */}
-            <div className="mt-16 flex flex-col md:flex-row justify-between items-center gap-8">
-              <div className="flex space-x-3 w-full md:w-auto">
-                <button type="button" className="flex-1 btn-artistic-outline">Add Children</button>
-                <button type="button" className="flex-1 btn-artistic-muted">Add Parent</button>
-              </div>
+            <div className="mt-16 flex flex-col md:flex-row justify-end items-center gap-8">
               <button 
                 type="submit" 
                 form="register"

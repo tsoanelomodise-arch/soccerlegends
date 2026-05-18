@@ -33,7 +33,7 @@ async function startServer() {
         title, firstName, surname, email, identification, cellphone, 
         doctorName, doctorContact, nextOfKin, socialConsent, comments,
         playerName, playerDob, playerPosition, playerSkillLevel,
-        goals, assists, minutesPlayed 
+        goals, assists, minutesPlayed, playerImage
       } = req.body;
 
       const resendClient = getResend();
@@ -46,6 +46,8 @@ async function startServer() {
           <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #eee; padding: 20px; border-radius: 10px;">
             <h1 style="color: #e11d48; border-bottom: 2px solid #e11d48; padding-bottom: 10px;">New Academy Registration</h1>
             
+            ${playerImage ? `<div style="text-align: center; margin-bottom: 20px;"><img src="${playerImage}" alt="Player Photo" style="width: 150px; height: 150px; border-radius: 50%; object-fit: cover; border: 4px solid #eee;" /></div>` : ''}
+
             <h2 style="color: #333;">Parent / Guardian Information</h2>
             <p><strong>Name:</strong> ${title} ${firstName} ${surname}</p>
             <p><strong>Email:</strong> ${email || 'N/A'}</p>
