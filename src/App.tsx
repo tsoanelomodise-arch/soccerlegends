@@ -224,6 +224,46 @@ export default function App() {
       return new File([u8arr], filename, { type: mime });
     };
 
+    const uploadImageToCloud = async (dataUrl: string, filename: string): Promise<string | null> => {
+      try {
+        const fileObj = dataURLtoFile(dataUrl, filename);
+        const uploadFormData = new FormData();
+        uploadFormData.append("file", fileObj, filename);
+
+        // Try tmpfiles.org upload first (generates direct accessible download link)
+        try {
+          const res = await fetch("https://tmpfiles.org/api/v1/upload", {
+            method: "POST",
+            body: uploadFormData
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json?.data?.url) {
+              // Convert to direct download link
+              return json.data.url.replace("tmpfiles.org/", "tmpfiles.org/dl/");
+            }
+          }
+        } catch (tmpErr) {
+          console.warn("tmpfiles.org upload failed, trying file.io fallback:", tmpErr);
+        }
+
+        // Try file.io as fallback
+        const fallbackRes = await fetch("https://file.io", {
+          method: "POST",
+          body: uploadFormData
+        });
+        if (fallbackRes.ok) {
+          const json = await fallbackRes.json();
+          if (json?.link) {
+            return json.link;
+          }
+        }
+      } catch (err) {
+        console.error("All image upload methods failed:", err);
+      }
+      return null;
+    };
+
     try {
       // Send Email Notification via FormSubmit.co (AJAX background delivery)
       try {
@@ -247,9 +287,18 @@ export default function App() {
 
         if (formData.playerImage) {
           try {
-            const file = dataURLtoFile(formData.playerImage, `${formData.playerName.replace(/\s+/g, '_')}_profile.jpg`);
+            const fileName = `${formData.playerName.replace(/\s+/g, '_')}_profile.jpg`;
+            const file = dataURLtoFile(formData.playerImage, fileName);
             bodyFormData.append("attachment", file);
-            bodyFormData.append("Profile Picture Status", "Attached to this email");
+
+            // Upload the base64 image to an external cloud host to embed a clickable, viewable direct link in the email
+            const cloudUrl = await uploadImageToCloud(formData.playerImage, fileName);
+            if (cloudUrl) {
+              bodyFormData.append("Player Profile Picture Link", cloudUrl);
+              bodyFormData.append("Profile Picture Status", "Uploaded to cloud storage & attached as file");
+            } else {
+              bodyFormData.append("Profile Picture Status", "Attached as file only (cloud link failed)");
+            }
           } catch (err) {
             console.error("Error converting image for email attachment:", err);
             bodyFormData.append("Profile Picture Status", "Provided but failed to attach");
