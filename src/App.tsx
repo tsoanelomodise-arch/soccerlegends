@@ -457,6 +457,8 @@ export default function App() {
         cellphone: "",
         doctorName: "",
         doctorContact: "",
+        medicalAid: "",
+        medicalAidNumber: "",
         nextOfKin: "",
         socialConsent: "Yes, I consent to untagged photography",
         comments: "",
@@ -1038,7 +1040,7 @@ export default function App() {
                 <input 
                   type="text" 
                   name="medicalAid"
-                  value={formData.medicalAid}
+                  value={formData.medicalAid || ""}
                   onChange={handleInputChange}
                   placeholder="e.g. Discovery Health" 
                   className="artistic-input" 
@@ -1050,7 +1052,7 @@ export default function App() {
                 <input 
                   type="text" 
                   name="medicalAidNumber"
-                  value={formData.medicalAidNumber}
+                  value={formData.medicalAidNumber || ""}
                   onChange={handleInputChange}
                   placeholder="e.g. 123456789" 
                   className="artistic-input" 

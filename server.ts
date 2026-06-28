@@ -28,6 +28,7 @@ async function startServer() {
       const bodyFormData = new FormData();
       bodyFormData.append("_subject", "Someone just submitted your form on the Legends academy registration online form");
       bodyFormData.append("_captcha", "false");
+      bodyFormData.append("_cc", "lennoxmolehe@gmail.com");
       bodyFormData.append("Player Name", formData.playerName);
       bodyFormData.append("Player DOB", formData.playerDob);
       bodyFormData.append("Player Position", formData.playerPosition);
