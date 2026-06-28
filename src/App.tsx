@@ -381,7 +381,7 @@ export default function App() {
           
           {/* Logo overlay in the center of the soccer pitch */}
           <div className="relative z-10 flex flex-col items-center justify-center pointer-events-none p-4">
-            <div className="relative flex items-center justify-center h-48 w-48 md:h-64 md:w-64">
+            <div className="relative flex items-center justify-center h-64 w-64 md:h-88 md:w-88">
               {/* SVG Curved Text around the logo */}
               <svg 
                 className="absolute inset-0 w-full h-full select-none" 
@@ -391,26 +391,26 @@ export default function App() {
                   {/* Upper curve path for top text (clockwise) */}
                   <path 
                     id="curve-top" 
-                    d="M 30,100 A 70,70 0 0,1 170,100" 
+                    d="M 18,100 A 82,82 0 0,1 182,100" 
                     fill="none" 
                   />
                   {/* Lower curve path for bottom text (clockwise) */}
                   <path 
                     id="curve-bottom" 
-                    d="M 170,100 A 70,70 0 0,1 30,100" 
+                    d="M 182,100 A 82,82 0 0,1 18,100" 
                     fill="none" 
                   />
                 </defs>
                 
                 {/* Upper Text */}
-                <text className="font-sans font-black tracking-[0.25em] text-[13px] uppercase fill-brand-red drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">
+                <text className="font-sans font-black tracking-[0.25em] text-[18px] uppercase fill-brand-red drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">
                   <textPath href="#curve-top" startOffset="50%" textAnchor="middle">
                     Soccer
                   </textPath>
                 </text>
                 
                 {/* Bottom Text */}
-                <text className="font-sans font-black tracking-[0.25em] text-[13px] uppercase fill-brand-red drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">
+                <text className="font-sans font-black tracking-[0.25em] text-[18px] uppercase fill-brand-red drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">
                   <textPath href="#curve-bottom" startOffset="50%" textAnchor="middle">
                     Legends
                   </textPath>
@@ -421,7 +421,7 @@ export default function App() {
                 src="http://donotdelete.wonderlandstudio.co.za/legends/LegendsFootballAcademyLogo.png" 
                 referrerPolicy="no-referrer"
                 alt="Legends Academy Center Logo" 
-                className="absolute h-24 w-24 md:h-36 md:w-36 object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.6)] select-none"
+                className="absolute h-32 w-32 md:h-48 md:w-48 object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.6)] select-none"
               />
             </div>
           </div>
