@@ -13,7 +13,6 @@ import {
 import { useState, ChangeEvent, FormEvent } from "react";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { db } from "./lib/firebase";
-import emailjs from "@emailjs/browser";
 
 enum OperationType {
   CREATE = 'create',
@@ -118,6 +117,40 @@ export default function App() {
     }
   };
 
+  const compressImage = (base64Str: string): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = base64Str;
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX_WIDTH = 800;
+        const MAX_HEIGHT = 800;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > MAX_WIDTH) {
+            height *= MAX_WIDTH / width;
+            width = MAX_WIDTH;
+          }
+        } else {
+          if (height > MAX_HEIGHT) {
+            width *= MAX_HEIGHT / height;
+            height = MAX_HEIGHT;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx?.drawImage(img, 0, 0, width, height);
+        
+        // Compress to JPEG with 0.7 quality
+        resolve(canvas.toDataURL('image/jpeg', 0.7));
+      };
+    });
+  };
+
   const handleImageChange = (e: ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -129,14 +162,11 @@ export default function App() {
       return;
     }
 
-    if (file.size > 2 * 1024 * 1024) {
-      setErrors(prev => ({ ...prev, playerImage: "Image must be less than 2MB." }));
-      return;
-    }
-
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setFormData(prev => ({ ...prev, playerImage: reader.result as string }));
+    reader.onloadend = async () => {
+      const base64 = reader.result as string;
+      const compressed = await compressImage(base64);
+      setFormData(prev => ({ ...prev, playerImage: compressed }));
       setErrors(prev => {
         const newErrors = { ...prev };
         delete newErrors.playerImage;
@@ -236,39 +266,45 @@ export default function App() {
 
       await addDoc(collection(db, path), dataToSave);
 
-      // Send Email via EmailJS
-      const serviceId = import.meta.env.VITE_EMAILJS_SERVICE_ID;
-      const templateId = import.meta.env.VITE_EMAILJS_TEMPLATE_ID;
-      const publicKey = import.meta.env.VITE_EMAILJS_PUBLIC_KEY;
+      // Send Email Notification via FormSubmit.co (AJAX background delivery)
+      try {
+        const emailResponse = await fetch("https://formsubmit.co/ajax/info@legendsacademy.co.za", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json"
+          },
+          body: JSON.stringify({
+            _subject: `Legends Academy Registration - ${formData.playerName}`,
+            _captcha: "false",
+            "Player Name": formData.playerName,
+            "Player DOB": formData.playerDob,
+            "Player Position": formData.playerPosition,
+            "Player Skill Level": formData.playerSkillLevel,
+            "Goals": formData.goals || "0",
+            "Assists": formData.assists || "0",
+            "Minutes Played": formData.minutesPlayed || "0",
+            "Parent/Guardian": `${formData.title} ${formData.firstName} ${formData.surname}`,
+            "Parent Email": formData.email || "N/A",
+            "Parent Phone": formData.cellphone,
+            "Medical Doctor": `${formData.doctorName} (${formData.doctorContact})`,
+            "Next of Kin": formData.nextOfKin,
+            "Photo Consent": formData.socialConsent,
+            "Comments": formData.comments || "None",
+            "Profile Picture Status": formData.playerImage ? "Saved in Firestore database" : "Not provided"
+          })
+        });
 
-      if (serviceId && templateId && publicKey) {
-        try {
-          await emailjs.send(
-            serviceId,
-            templateId,
-            {
-              to_name: "Legends Academy Admin",
-              from_name: `${formData.firstName} ${formData.surname}`,
-              player_name: formData.playerName,
-              parent_email: formData.email || "N/A",
-              parent_phone: formData.cellphone,
-              player_dob: formData.playerDob,
-              position: formData.playerPosition,
-              skill_level: formData.playerSkillLevel,
-              medical_doctor: `${formData.doctorName} (${formData.doctorContact})`,
-              next_of_kin: formData.nextOfKin,
-              comments: formData.comments || "None",
-              player_image: formData.playerImage ? "Photo included in database" : "No photo provided"
-            },
-            publicKey
-          );
-        } catch (emailError) {
-          console.error("Email notification failed to send:", emailError);
-          // We don't alert here because the registration was already saved to DB
+        if (emailResponse.ok) {
+          alert("Registration successful! Your details have been saved to our database and our team has been notified via email.");
+        } else {
+          console.warn("FormSubmit.co response not OK:", emailResponse.statusText);
+          alert("Registration saved to our database successfully!\n\nNote: The automated email confirmation is being processed manually. No action is required from you.");
         }
+      } catch (emailError) {
+        console.error("FormSubmit.co AJAX submission error:", emailError);
+        alert("Registration saved to our database successfully!\n\nNote: The automated email notification failed to send due to a temporary connection error, but our team will retrieve your details directly from the database.");
       }
-
-      alert("Registration successful! Your details have been saved to our database and our team has been notified.");
       
       // Reset form
       setFormData({
@@ -311,10 +347,6 @@ export default function App() {
           <div className="flex items-center space-x-12">
             <div className="flex items-center gap-3">
               <img src="images/logo.png" alt="Legends Academy Logo" className="h-20 w-20 object-contain" />
-              <div className="flex flex-col">
-                <span className="text-[11px] font-black tracking-tight text-text-main leading-tight">LEGENDS</span>
-                <span className="text-[8px] font-bold text-gray-400 tracking-[0.2em] uppercase leading-tight">Academy</span>
-              </div>
             </div>
           </div>
 
@@ -687,7 +719,7 @@ export default function App() {
 
                 <div className="mt-4 text-center">
                   <label className="artistic-label mb-1">Player Profile Picture</label>
-                  <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Max 2MB • JPG, PNG, WEBP</p>
+                  <p className="text-[9px] text-gray-400 uppercase tracking-widest font-bold">Auto-optimized • JPG, PNG, WEBP</p>
                   <AnimatePresence>
                     {errors.playerImage && (
                       <motion.span 
