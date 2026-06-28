@@ -1,16 +1,28 @@
 import { motion, AnimatePresence } from "motion/react";
 import { 
-  Check,
-  ArrowRight,
-  AlertCircle,
   Facebook,
   Twitter,
   Instagram,
   Camera,
-  User,
-  Upload
+  Calendar,
+  Menu,
+  X
 } from "lucide-react";
+import { 
+  BespokeUsers,
+  BespokeUser,
+  BespokeBarChart3,
+  BespokeCreditCard,
+  BespokeFileText,
+  BespokeLock,
+  BespokeCopy,
+  BespokeUpload,
+  BespokeAlertCircle,
+  BespokeCheck,
+  BespokeArrowRight
+} from "./components/BespokeIcons";
 import { useState, ChangeEvent, FormEvent } from "react";
+import AnimatedPitch from "./components/AnimatedPitch";
 
 interface FormData {
   title: string;
@@ -33,6 +45,11 @@ interface FormData {
   goals: string;
   assists: string;
   minutesPlayed: string;
+  registrationType: "weekly" | "daily";
+  selectedDays: string[];
+  proofOfPayment: string | null;
+  proofOfPaymentName: string;
+  agreeIndemnity: boolean;
 }
 
 interface FormErrors {
@@ -42,7 +59,23 @@ interface FormErrors {
 export default function App() {
   const [usePassport, setUsePassport] = useState(false);
   const [noEmail, setNoEmail] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   
+  const menuItems = [
+    { label: "Guardian Registration", target: "guardian-registration", icon: BespokeUsers },
+    { label: "Player Detail", target: "player-detail", icon: BespokeUser },
+    { label: "Player Statistics", target: "player-statistics", icon: BespokeBarChart3 },
+    { label: "Fees", target: "fees", icon: BespokeCreditCard }
+  ];
+
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const [formData, setFormData] = useState<FormData>({
     title: "Mr.",
     firstName: "",
@@ -64,6 +97,11 @@ export default function App() {
     goals: "",
     assists: "",
     minutesPlayed: "",
+    registrationType: "weekly",
+    selectedDays: [],
+    proofOfPayment: null,
+    proofOfPaymentName: "",
+    agreeIndemnity: false,
   });
 
   const [errors, setErrors] = useState<FormErrors>({});
@@ -79,6 +117,55 @@ export default function App() {
       age--;
     }
     return age >= 0 ? age : 0;
+  };
+
+  const handleDayToggle = (day: string) => {
+    setFormData(prev => {
+      const days = prev.selectedDays.includes(day)
+        ? prev.selectedDays.filter(d => d !== day)
+        : [...prev.selectedDays, day];
+      
+      if (errors.selectedDays && days.length > 0) {
+        setErrors(err => {
+          const newErrors = { ...err };
+          delete newErrors.selectedDays;
+          return newErrors;
+        });
+      }
+      return { ...prev, selectedDays: days };
+    });
+  };
+
+  const handleProofChange = (e: ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!validTypes.includes(file.type)) {
+      setErrors(prev => ({ ...prev, proofOfPayment: "Please upload a JPG, PNG, WEBP or PDF file." }));
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setFormData(prev => ({ 
+        ...prev, 
+        proofOfPayment: reader.result as string,
+        proofOfPaymentName: file.name
+      }));
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors.proofOfPayment;
+        return newErrors;
+      });
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -191,6 +278,16 @@ export default function App() {
     if (!formData.playerName.trim()) newErrors.playerName = "Player name is required";
     if (!formData.playerDob) newErrors.playerDob = "Date of birth is required";
     if (!formData.agreeTerms) newErrors.agreeTerms = "You must agree to the terms and conditions";
+    
+    // Validate selected camp sessions
+    if (formData.selectedDays.length === 0) {
+      newErrors.selectedDays = "You must select at least one session of attendance";
+    }
+
+    // Validate indemnity agreement
+    if (!formData.agreeIndemnity) {
+      newErrors.agreeIndemnity = "You must accept the indemnity waiver to register";
+    }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -284,6 +381,11 @@ export default function App() {
         bodyFormData.append("Next of Kin", formData.nextOfKin);
         bodyFormData.append("Photo Consent", formData.socialConsent);
         bodyFormData.append("Comments", formData.comments || "None");
+        
+        // New extracted details
+        bodyFormData.append("Registration Type", formData.registrationType === "weekly" ? "Weekly (R900)" : "Daily (R250/day)");
+        bodyFormData.append("Selected Sessions of Attendance", formData.selectedDays.join(", "));
+        bodyFormData.append("Injury & Theft Indemnity Agreed", formData.agreeIndemnity ? "Yes (Agreed to Camp Policy)" : "No");
 
         if (formData.playerImage) {
           try {
@@ -305,6 +407,30 @@ export default function App() {
           }
         } else {
           bodyFormData.append("Profile Picture Status", "Not provided");
+        }
+
+        // Proof of Payment Upload and Link
+        if (formData.proofOfPayment) {
+          try {
+            const ext = formData.proofOfPaymentName.split('.').pop() || 'jpg';
+            const fileName = `${formData.playerName.replace(/\s+/g, '_')}_pop.${ext}`;
+            const file = dataURLtoFile(formData.proofOfPayment, fileName);
+            // FormSubmit supports multiple attachments under attachment2, attachment3 etc.
+            bodyFormData.append("attachment2", file);
+
+            const cloudUrl = await uploadImageToCloud(formData.proofOfPayment, fileName);
+            if (cloudUrl) {
+              bodyFormData.append("Proof of Payment Link", cloudUrl);
+              bodyFormData.append("Proof of Payment Status", "Uploaded to cloud & attached as file");
+            } else {
+              bodyFormData.append("Proof of Payment Status", "Attached as file only");
+            }
+          } catch (popErr) {
+            console.error("Error attaching proof of payment:", popErr);
+            bodyFormData.append("Proof of Payment Status", "Provided but failed to attach");
+          }
+        } else {
+          bodyFormData.append("Proof of Payment Status", "Not provided");
         }
 
         const emailResponse = await fetch("https://formsubmit.co/ajax/eb1cf09e9e3178f4e5b2faa807063900", {
@@ -348,6 +474,11 @@ export default function App() {
         goals: "",
         assists: "",
         minutesPlayed: "",
+        registrationType: "weekly",
+        selectedDays: [],
+        proofOfPayment: null,
+        proofOfPaymentName: "",
+        agreeIndemnity: false,
       });
       setNoEmail(false);
       setUsePassport(false);
@@ -363,86 +494,247 @@ export default function App() {
     <div className="min-h-screen bg-field-green-light font-sans text-text-main flex flex-col items-center lg:py-12 lg:px-4">
       <main className="w-full max-w-6xl flex-1 flex flex-col bg-white relative lg:rounded-2xl lg:shadow-2xl overflow-hidden min-h-0 lg:min-h-[85vh]">
         {/* Top Nav */}
-        <nav className="h-24 border-b border-gray-100 px-8 flex items-center justify-between shrink-0">
-          <div className="flex items-center space-x-12">
+        <nav className="h-24 border-b border-gray-100 px-6 md:px-8 flex items-center justify-between shrink-0">
+          <div className="flex items-center space-x-4 md:space-x-8">
             <div className="flex items-center gap-3">
               <img src="http://donotdelete.wonderlandstudio.co.za/legends/LegendsFootballAcademyLogo.png" referrerPolicy="no-referrer" alt="Legends Academy Logo" className="h-20 w-20 object-contain" />
             </div>
+            <div className="h-10 w-px bg-gray-200 hidden xs:block" />
+            <h1 className="text-brand-red font-sans font-black tracking-wide text-xs sm:text-sm md:text-xl uppercase select-none line-clamp-2 xs:line-clamp-none">
+              Legends Academy Registration
+            </h1>
           </div>
 
+          {/* Desktop Nav Items */}
+          <div className="hidden lg:flex items-center space-x-6">
+            {menuItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <button
+                  type="button"
+                  key={item.target}
+                  onClick={() => scrollToSection(item.target)}
+                  className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-brand-red transition-all duration-200 focus:outline-none py-2 px-1 relative group cursor-pointer"
+                >
+                  <Icon size={14} className="opacity-75 group-hover:opacity-100 transition-opacity" />
+                  <span>{item.label}</span>
+                  <span className="absolute bottom-0 left-0 w-0 h-0.5 bg-brand-red transition-all duration-300 group-hover:w-full" />
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden flex items-center">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="p-2 rounded-lg text-slate-600 hover:text-brand-red hover:bg-slate-50 transition-colors focus:outline-none cursor-pointer"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+            </button>
+          </div>
         </nav>
 
-          {/* Hero Section - Background image only */}
-        <section className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-center shrink-0">
-          <div 
-            className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('https://donotdelete.wonderlandstudio.co.za/legends/SoccerPitch.jpg')" }}
-          />
-          
-          {/* Logo overlay in the center of the soccer pitch */}
-          <div className="relative z-10 flex flex-col items-center justify-center pointer-events-none p-4">
-            <div className="relative flex items-center justify-center h-64 w-64 md:h-88 md:w-88">
-              {/* SVG Curved Text around the logo */}
-              <svg 
-                className="absolute inset-0 w-full h-full select-none" 
-                viewBox="0 0 200 200"
-              >
-                <defs>
-                  {/* Upper curve path for top text (clockwise) */}
-                  <path 
-                    id="curve-top" 
-                    d="M 18,100 A 82,82 0 0,1 182,100" 
-                    fill="none" 
-                  />
-                  {/* Lower curve path for bottom text (clockwise) */}
-                  <path 
-                    id="curve-bottom" 
-                    d="M 182,100 A 82,82 0 0,1 18,100" 
-                    fill="none" 
-                  />
-                </defs>
-                
-                {/* Upper Text */}
-                <text className="font-sans font-black tracking-[0.25em] text-[18px] uppercase fill-brand-red drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">
-                  <textPath href="#curve-top" startOffset="50%" textAnchor="middle">
-                    Soccer
-                  </textPath>
-                </text>
-                
-                {/* Bottom Text */}
-                <text className="font-sans font-black tracking-[0.25em] text-[18px] uppercase fill-brand-red drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">
-                  <textPath href="#curve-bottom" startOffset="50%" textAnchor="middle">
-                    Legends
-                  </textPath>
-                </text>
-              </svg>
+        {/* Mobile Menu Dropdown */}
+        <AnimatePresence>
+          {mobileMenuOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              className="absolute top-24 left-0 right-0 bg-white border-b border-gray-100 shadow-xl z-50 lg:hidden flex flex-col p-4 space-y-2"
+            >
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                return (
+                  <button
+                    type="button"
+                    key={item.target}
+                    onClick={() => {
+                      scrollToSection(item.target);
+                      setMobileMenuOpen(false);
+                    }}
+                    className="flex items-center gap-3 p-3 text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-brand-red hover:bg-slate-50 rounded-xl transition-all text-left focus:outline-none cursor-pointer"
+                  >
+                    <Icon size={16} className="text-slate-400" />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
-              <img 
-                src="http://donotdelete.wonderlandstudio.co.za/legends/LegendsFootballAcademyLogo.png" 
-                referrerPolicy="no-referrer"
-                alt="Legends Academy Center Logo" 
-                className="absolute h-32 w-32 md:h-48 md:w-48 object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.6)] select-none"
-              />
-            </div>
-          </div>
-          
-          {/* Graphical elements matching the image */}
-          <div className="absolute bottom-8 left-8 flex space-x-4 opacity-30">
-            <div className="w-16 h-1.5 bg-white/50 rounded-full overflow-hidden">
-              <div className="h-full bg-white w-2/3"></div>
-            </div>
-          </div>
-          <div className="absolute bottom-8 right-8 flex space-x-4 opacity-30">
-            <div className="w-16 h-1.5 bg-white/50 rounded-full overflow-hidden">
-              <div className="h-full bg-white w-1/3"></div>
-            </div>
-          </div>
-        </section>
+          {/* Hero Section with interactive passing soccer players */}
+          <AnimatedPitch />
 
         {/* Scrollable Form Area */}
         <div className="flex-1 overflow-y-auto p-8 md:p-12">
           <div className="max-w-3xl mx-auto mb-16">
-            <div className="mb-10">
+            
+            {/* Camp Information & Banking Details Dashboard */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+              {/* Card 1: Camp Essentials & Provision */}
+              <div className="bg-slate-950 text-white rounded-xl p-6 shadow-md border border-slate-800/60 relative overflow-hidden flex flex-col justify-between">
+                {/* Background decorative texture with brand red */}
+                <div className="absolute top-0 right-0 w-24 h-24 bg-brand-red/10 rounded-full blur-2xl pointer-events-none" />
+                
+                <div>
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="p-1.5 rounded-lg bg-brand-red/10 border border-brand-red/20 text-brand-red">
+                      <BespokeFileText size={16} />
+                    </span>
+                    <h3 className="font-display font-black text-xs tracking-wider uppercase text-slate-100">Camp Essentials & Provisions</h3>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <h4 className="text-[10px] uppercase tracking-wider text-brand-red font-black mb-1.5">Legends Will Provide:</h4>
+                      <ul className="grid grid-cols-2 gap-y-1 gap-x-2 text-[11px] text-slate-300">
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-400 font-bold">✓</span> Water + Refills
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-400 font-bold">✓</span> Energade
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-400 font-bold">✓</span> Fresh Fruit
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-400 font-bold">✓</span> Crisps
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-400 font-bold">✓</span> Chocolate Bar
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-emerald-400 font-bold">✓</span> Coldrink at end
+                        </li>
+                        <li className="flex items-center col-span-2 gap-1.5 mt-0.5 bg-brand-red/10 border border-brand-red/20 px-2 py-0.5 rounded text-slate-100 font-semibold">
+                          <span className="text-brand-red font-black">★</span> Prepared Lunch Provided
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className="border-t border-slate-800/80 pt-3">
+                      <h4 className="text-[10px] uppercase tracking-wider text-amber-500 font-black mb-1.5">What to Bring Along:</h4>
+                      <ul className="grid grid-cols-2 gap-y-1 gap-x-2 text-[11px] text-slate-300">
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-amber-500 font-bold">•</span> Shin Pads
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-amber-500 font-bold">•</span> Cap / Hat
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-amber-500 font-bold">•</span> Sunblock
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-amber-500 font-bold">•</span> Water Bottle
+                        </li>
+                        <li className="flex items-center col-span-2 gap-1.5">
+                          <span className="text-amber-500 font-bold">•</span> Warm Top (mornings)
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 text-[9px] text-slate-400 italic bg-slate-900/60 p-2 rounded border border-slate-800/80">
+                  Please pack what is required to ensure your child remains protected and warm.
+                </div>
+              </div>
+
+              {/* Card 2: Tuition Fees & Bank Details */}
+              <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <span className="p-1.5 rounded-lg bg-emerald-100 text-emerald-600">
+                        <BespokeLock size={16} />
+                      </span>
+                      <h3 className="font-display font-bold text-xs tracking-wider uppercase text-gray-800">Fees & Secure Banking</h3>
+                    </div>
+                    <span className="text-[9px] bg-brand-red/10 text-brand-red px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
+                      Camp Tuition
+                    </span>
+                  </div>
+
+                  {/* Pricing Tiers */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-slate-50 p-2 rounded-lg border border-gray-100 text-center">
+                      <p className="text-[9px] text-gray-400 uppercase font-black tracking-wider">Full Week</p>
+                      <p className="text-xl font-display font-black text-slate-900 mt-0.5">R900</p>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-gray-100 text-center">
+                      <p className="text-[9px] text-gray-400 uppercase font-black tracking-wider">Daily Rate</p>
+                      <p className="text-xl font-display font-black text-slate-900 mt-0.5">R250</p>
+                    </div>
+                  </div>
+
+                  {/* Banking specifications */}
+                  <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-gray-100 relative group">
+                    <button 
+                      type="button"
+                      onClick={() => copyToClipboard("63206821034")}
+                      className="absolute top-2 right-2 p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-all focus:outline-none"
+                      title="Copy Account Number"
+                    >
+                      {copied ? (
+                        <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200">Copied</span>
+                      ) : (
+                        <BespokeCopy size={13} />
+                      )}
+                    </button>
+
+                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Bank details</p>
+                    <div className="grid grid-cols-2 gap-y-1.5 gap-x-2 text-[11px] text-slate-700 font-medium">
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Bank</span>
+                        <strong className="text-slate-800">FNB</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Account Name</span>
+                        <strong className="text-slate-800 text-xs font-bold">Academy of Legends NPC</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Account Number</span>
+                        <strong className="text-brand-red text-sm font-mono tracking-wide select-all font-black">63206821034</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Account Type</span>
+                        <strong className="text-slate-800">Cheque Account</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Branch / Code</span>
+                        <strong className="text-slate-800">Olympus / 250655</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Payment Reference</span>
+                        <strong className="text-slate-800 uppercase text-[10px]">Child's Name & Surname</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex items-center justify-between bg-emerald-50 p-2 rounded border border-emerald-100">
+                  <div className="text-[9px] text-emerald-800 leading-normal">
+                    <span className="font-bold block uppercase tracking-wider text-[8px] text-emerald-900 mb-0.5">WhatsApp Proof of Payment:</span>
+                    Send receipt to <strong className="font-extrabold">Les at 074 795 0457</strong>
+                  </div>
+                  <a 
+                    href="https://wa.me/27747950457?text=Hi%20Les,%20here%20is%20my%20proof%20of%20payment%20for%20the%20Legends%20Camp"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="p-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white transition-colors flex items-center justify-center shadow-sm text-[9px] font-black uppercase tracking-wider px-2"
+                  >
+                    Send POP
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            <div className="mb-10 scroll-mt-6" id="guardian-registration">
               <span className="text-[10px] uppercase tracking-[0.3em] font-black text-brand-red block mb-3">Form Alpha-03</span>
               <h2 className="text-3xl font-light text-text-main flex items-baseline">
                 Parent / Guardian <span className="font-black ml-2">Registration</span>
@@ -473,7 +765,7 @@ export default function App() {
                       onClick={() => setNoEmail(!noEmail)}
                       className={`w-4 h-4 mr-2 border rounded-sm flex items-center justify-center transition-all ${noEmail ? 'bg-brand-red border-brand-red' : 'border-gray-300'}`}
                     >
-                      {noEmail && <Check size={10} className="text-white" />}
+                      {noEmail && <BespokeCheck size={10} className="text-white" />}
                     </div>
                     Cell Only
                   </label>
@@ -482,7 +774,7 @@ export default function App() {
                       onClick={() => setUsePassport(!usePassport)}
                       className={`w-4 h-4 mr-2 border rounded-sm flex items-center justify-center transition-all ${usePassport ? 'bg-brand-red border-brand-red' : 'border-gray-300'}`}
                     >
-                      {usePassport && <Check size={10} className="text-white" />}
+                      {usePassport && <BespokeCheck size={10} className="text-white" />}
                     </div>
                     Passport Holder
                   </label>
@@ -508,7 +800,7 @@ export default function App() {
                       exit={{ opacity: 0, height: 0 }}
                       className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
                     >
-                      <AlertCircle size={10} /> {errors.firstName}
+                      <BespokeAlertCircle size={10} /> {errors.firstName}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -532,7 +824,7 @@ export default function App() {
                       exit={{ opacity: 0, height: 0 }}
                       className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
                     >
-                      <AlertCircle size={10} /> {errors.surname}
+                      <BespokeAlertCircle size={10} /> {errors.surname}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -558,7 +850,7 @@ export default function App() {
                         exit={{ opacity: 0, height: 0 }}
                         className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
                       >
-                        <AlertCircle size={10} /> {errors.email}
+                        <BespokeAlertCircle size={10} /> {errors.email}
                       </motion.span>
                     )}
                   </AnimatePresence>
@@ -583,7 +875,7 @@ export default function App() {
                       exit={{ opacity: 0, height: 0 }}
                       className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
                     >
-                      <AlertCircle size={10} /> {errors.identification}
+                      <BespokeAlertCircle size={10} /> {errors.identification}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -607,7 +899,7 @@ export default function App() {
                       exit={{ opacity: 0, height: 0 }}
                       className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
                     >
-                      <AlertCircle size={10} /> {errors.cellphone}
+                      <BespokeAlertCircle size={10} /> {errors.cellphone}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -636,7 +928,7 @@ export default function App() {
                       exit={{ opacity: 0, height: 0 }}
                       className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
                     >
-                      <AlertCircle size={10} /> {errors.doctorName}
+                      <BespokeAlertCircle size={10} /> {errors.doctorName}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -660,7 +952,7 @@ export default function App() {
                       exit={{ opacity: 0, height: 0 }}
                       className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
                     >
-                      <AlertCircle size={10} /> {errors.doctorContact}
+                      <BespokeAlertCircle size={10} /> {errors.doctorContact}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -684,7 +976,7 @@ export default function App() {
                       exit={{ opacity: 0, height: 0 }}
                       className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
                     >
-                      <AlertCircle size={10} /> {errors.nextOfKin}
+                      <BespokeAlertCircle size={10} /> {errors.nextOfKin}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -735,14 +1027,14 @@ export default function App() {
                       exit={{ opacity: 0, height: 0 }}
                       className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
                     >
-                      <AlertCircle size={10} /> {errors.agreeTerms}
+                      <BespokeAlertCircle size={10} /> {errors.agreeTerms}
                     </motion.span>
                   )}
                 </AnimatePresence>
               </div>
 
               {/* Player Registration Section */}
-              <div className="col-span-1 md:col-span-2 pt-12 mb-4">
+              <div className="col-span-1 md:col-span-2 pt-12 mb-4 scroll-mt-6" id="player-detail">
                 <div className="mb-8">
                   <span className="text-[10px] uppercase tracking-[0.3em] font-black text-brand-red block mb-2">Form Alpha-03B</span>
                   <h2 className="text-2xl font-light text-text-main flex items-baseline">
@@ -758,7 +1050,7 @@ export default function App() {
                     {formData.playerImage ? (
                       <img src={formData.playerImage} alt="Player Preview" className="w-full h-full object-cover" />
                     ) : (
-                      <User size={60} className="text-gray-200" />
+                      <BespokeUser size={60} className="text-gray-200" />
                     )}
                     
                     <label className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer">
@@ -795,7 +1087,7 @@ export default function App() {
                         exit={{ opacity: 0, height: 0 }}
                         className="text-[10px] text-brand-red mt-2 font-bold flex items-center justify-center gap-1"
                       >
-                        <AlertCircle size={10} /> {errors.playerImage}
+                        <BespokeAlertCircle size={10} /> {errors.playerImage}
                       </motion.span>
                     )}
                   </AnimatePresence>
@@ -820,7 +1112,7 @@ export default function App() {
                       exit={{ opacity: 0, height: 0 }}
                       className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
                     >
-                      <AlertCircle size={10} /> {errors.playerName}
+                      <BespokeAlertCircle size={10} /> {errors.playerName}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -850,7 +1142,7 @@ export default function App() {
                       exit={{ opacity: 0, height: 0 }}
                       className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
                     >
-                      <AlertCircle size={10} /> {errors.playerDob}
+                      <BespokeAlertCircle size={10} /> {errors.playerDob}
                     </motion.span>
                   )}
                 </AnimatePresence>
@@ -887,7 +1179,7 @@ export default function App() {
               </div>
 
               {/* Player Statistics Section */}
-              <div className="col-span-1 md:col-span-2 pt-12 mb-4">
+              <div className="col-span-1 md:col-span-2 pt-12 mb-4 scroll-mt-6" id="player-statistics">
                 <div className="mb-8">
                   <span className="text-[10px] uppercase tracking-[0.3em] font-black text-brand-red block mb-2">Form Alpha-03C</span>
                   <h2 className="text-2xl font-light text-text-main flex items-baseline">
@@ -930,6 +1222,203 @@ export default function App() {
                   placeholder="0" 
                   className="artistic-input" 
                 />
+              </div>
+
+              {/* Payment Section (Form Alpha-03D) */}
+              <div className="col-span-1 md:col-span-2 pt-12 mb-4 scroll-mt-6" id="fees">
+                <div className="mb-8">
+                  <span className="text-[10px] uppercase tracking-[0.3em] font-black text-brand-red block mb-2">Form Alpha-03D</span>
+                  <h2 className="text-2xl font-light text-text-main flex items-baseline">
+                    Fees & <span className="font-black ml-2">Payment</span>
+                  </h2>
+                </div>
+              </div>
+
+              {/* Registration Fee Option selection */}
+              <div className="flex flex-col col-span-1 md:col-span-2">
+                <label className="artistic-label">Registration Type</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-2">
+                  <label 
+                    className={`flex flex-col p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      formData.registrationType === "weekly" 
+                        ? "border-brand-red bg-red-50/10" 
+                        : "border-gray-200 bg-white hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800">Full Week Camp</span>
+                      <input 
+                        type="radio" 
+                        name="registrationType" 
+                        value="weekly" 
+                        checked={formData.registrationType === "weekly"} 
+                        onChange={() => setFormData(prev => ({ ...prev, registrationType: "weekly" }))}
+                        className="accent-brand-red h-4 w-4"
+                      />
+                    </div>
+                    <span className="text-xl font-display font-black text-slate-900">R900 <span className="text-[10px] text-gray-400 font-sans font-normal">/ week</span></span>
+                    <span className="text-[9.5px] text-gray-500 mt-1">Includes all training sessions, prepared lunches, and refreshments.</span>
+                  </label>
+
+                  <label 
+                    className={`flex flex-col p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                      formData.registrationType === "daily" 
+                        ? "border-brand-red bg-red-50/10" 
+                        : "border-gray-200 bg-white hover:border-gray-300"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-xs font-black uppercase tracking-wider text-slate-800">Daily Attendance</span>
+                      <input 
+                        type="radio" 
+                        name="registrationType" 
+                        value="daily" 
+                        checked={formData.registrationType === "daily"} 
+                        onChange={() => setFormData(prev => ({ ...prev, registrationType: "daily" }))}
+                        className="accent-brand-red h-4 w-4"
+                      />
+                    </div>
+                    <span className="text-xl font-display font-black text-slate-900">R250 <span className="text-[10px] text-gray-400 font-sans font-normal">/ day</span></span>
+                    <span className="text-[9.5px] text-gray-500 mt-1">Select specific days below. Includes lunches & refreshments for selected days.</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Day selection checkboxes */}
+              <div className="col-span-1 md:col-span-2 flex flex-col">
+                <label className="artistic-label mb-2">Days of Attendance (Select Session)</label>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                  {[
+                    { 
+                      id: "Session 1", 
+                      label: "14-17 JULY 09h00-12h00", 
+                      deadline: "PAYMENT BY 10 JULY", 
+                      value: "14-17 JULY 09h00-12h00 - PAYMENT BY 10 JULY" 
+                    },
+                    { 
+                      id: "Session 2", 
+                      label: "20-23 JULY 09h00-12h00", 
+                      deadline: "PAYMENT BY 16 JULY", 
+                      value: "20-23 JULY 09h00-12h00 - PAYMENT BY 16 JULY" 
+                    }
+                  ].map((session) => {
+                    const isSelected = formData.selectedDays.includes(session.value);
+                    return (
+                      <button
+                        type="button"
+                        key={session.id}
+                        onClick={() => handleDayToggle(session.value)}
+                        className={`p-4 rounded-xl border text-left transition-all flex items-start gap-4 cursor-pointer relative overflow-hidden group ${
+                          isSelected 
+                            ? "border-brand-red bg-red-50/5 text-slate-800 shadow-md shadow-brand-red/5" 
+                            : "border-gray-200 bg-white text-gray-600 hover:border-gray-300 hover:shadow-sm"
+                        }`}
+                      >
+                        {/* Red block design indicator on the left edge */}
+                        <div className={`absolute left-0 top-0 bottom-0 w-1 transition-all ${
+                          isSelected ? "bg-brand-red" : "bg-transparent group-hover:bg-gray-200"
+                        }`} />
+                        
+                        {/* Custom Checkbox */}
+                        <div className={`mt-0.5 w-5 h-5 rounded border-2 flex items-center justify-center shrink-0 transition-all duration-200 ${
+                          isSelected 
+                            ? "bg-brand-red border-brand-red text-white" 
+                            : "border-gray-300 bg-white group-hover:border-gray-400"
+                        }`}>
+                          {isSelected && <BespokeCheck size={12} />}
+                        </div>
+
+                        <div className="flex flex-col">
+                          <span className={`text-[13px] font-black tracking-wide ${isSelected ? 'text-slate-900' : 'text-slate-800'}`}>
+                            {session.label}
+                          </span>
+                          <span className="text-[10px] font-black uppercase tracking-wider text-brand-red mt-1 bg-red-50 px-2 py-0.5 rounded border border-red-100 self-start">
+                            {session.deadline}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+                {errors.selectedDays && (
+                  <span className="text-[10px] text-brand-red mt-2 font-bold flex items-center gap-1">
+                    <BespokeAlertCircle size={10} /> {errors.selectedDays}
+                  </span>
+                )}
+              </div>
+
+              {/* Proof of Payment File Upload */}
+              <div className="flex flex-col col-span-1 md:col-span-2">
+                <label className="artistic-label">Proof of Payment</label>
+                <div className="mt-2 flex items-center justify-center border-2 border-dashed border-gray-200 rounded-xl p-6 bg-slate-50/50 hover:bg-slate-50 transition-all relative min-h-[140px]">
+                  {formData.proofOfPayment ? (
+                    <div className="flex flex-col items-center text-center">
+                      <div className="p-3 bg-brand-red/10 rounded-full text-brand-red mb-2">
+                        <BespokeFileText size={28} />
+                      </div>
+                      <span className="text-xs font-bold text-slate-800 max-w-xs truncate">{formData.proofOfPaymentName}</span>
+                      <span className="text-[9px] text-gray-400 uppercase tracking-widest font-black mt-0.5">Uploaded POP Receipt</span>
+                      
+                      <button
+                        type="button"
+                        onClick={() => setFormData(prev => ({ ...prev, proofOfPayment: null, proofOfPaymentName: "" }))}
+                        className="mt-3 text-[10px] font-black uppercase tracking-wider text-brand-red hover:underline focus:outline-none"
+                      >
+                        Remove file
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center cursor-pointer w-full h-full py-2">
+                      <div className="p-3 bg-gray-100 rounded-full text-gray-500 mb-2">
+                        <BespokeUpload size={20} />
+                      </div>
+                      <span className="text-xs font-bold text-slate-700">Upload receipt document</span>
+                      <span className="text-[9px] text-gray-400 uppercase tracking-widest font-black mt-1">PDF, JPG, PNG or WEBP</span>
+                      <input 
+                        type="file" 
+                        accept="image/*,application/pdf" 
+                        onChange={handleProofChange} 
+                        className="hidden" 
+                      />
+                    </label>
+                  )}
+                </div>
+                <p className="text-[9.5px] text-gray-400 mt-1.5 uppercase tracking-wider font-bold">
+                  Reference format: <span className="text-brand-red">Child's Name & Surname</span>
+                </p>
+                {errors.proofOfPayment && (
+                  <span className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1">
+                    <BespokeAlertCircle size={10} /> {errors.proofOfPayment}
+                  </span>
+                )}
+              </div>
+
+              {/* Injury / Theft Indemnity Agreement Checkbox */}
+              <div className="col-span-1 md:col-span-2 mt-4 bg-slate-50 p-4 rounded-xl border border-gray-100">
+                <label className="flex items-start text-[11px] text-gray-600 cursor-pointer group">
+                  <input 
+                    type="checkbox" 
+                    name="agreeIndemnity"
+                    checked={formData.agreeIndemnity}
+                    onChange={(e) => setFormData(prev => ({ ...prev, agreeIndemnity: e.target.checked }))}
+                    className="mt-0.5 mr-3 accent-brand-red h-4 w-4 shrink-0 rounded" 
+                  /> 
+                  <span className="leading-relaxed">
+                    I, the parent/guardian, hereby acknowledge and agree that <strong className="text-slate-800">Legends Academy will not be held responsible for any injuries</strong> that may occur during the sessions. Furthermore, <strong className="text-slate-800">Legends Academy will not be held responsible for any theft of belongings</strong> during the duration of the camp.
+                  </span>
+                </label>
+                <AnimatePresence>
+                  {errors.agreeIndemnity && (
+                    <motion.span 
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="text-[10px] text-brand-red mt-2 font-bold flex items-center gap-1"
+                    >
+                      <BespokeAlertCircle size={10} /> {errors.agreeIndemnity}
+                    </motion.span>
+                  )}
+                </AnimatePresence>
               </div>
             </form>
 
@@ -1001,6 +1490,11 @@ export default function App() {
                     goals: String(Math.floor(Math.random() * 15)),
                     assists: String(Math.floor(Math.random() * 15)),
                     minutesPlayed: String(Math.floor(Math.random() * 800) + 100),
+                    registrationType: Math.random() > 0.5 ? "weekly" : "daily",
+                    selectedDays: ["14-17 JULY 09h00-12h00 - PAYMENT BY 10 JULY"],
+                    proofOfPayment: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+                    proofOfPaymentName: `${playerFirstName.toLowerCase()}_pop_receipt.png`,
+                    agreeIndemnity: true,
                   });
 
                   // Clear any existing validation errors
@@ -1016,7 +1510,7 @@ export default function App() {
                 disabled={isSubmitting}
                 className="w-full md:w-auto btn-artistic-primary flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isSubmitting ? "Processing..." : "Register"} <ArrowRight size={14} className="ml-2" />
+                {isSubmitting ? "Processing..." : "Register"} <BespokeArrowRight size={14} className="ml-2" />
               </button>
             </div>
           </div>
