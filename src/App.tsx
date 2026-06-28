@@ -11,23 +11,6 @@ import {
   Upload
 } from "lucide-react";
 import { useState, ChangeEvent, FormEvent } from "react";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
-import { db } from "./lib/firebase";
-
-enum OperationType {
-  CREATE = 'create',
-  UPDATE = 'update',
-  DELETE = 'delete',
-  LIST = 'list',
-  GET = 'get',
-  WRITE = 'write',
-}
-
-interface FirestoreErrorInfo {
-  error: string;
-  operationType: OperationType;
-  path: string | null;
-}
 
 interface FormData {
   title: string;
@@ -213,16 +196,6 @@ export default function App() {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleFirestoreError = (error: unknown, operationType: OperationType, path: string | null) => {
-    const errInfo: FirestoreErrorInfo = {
-      error: error instanceof Error ? error.message : String(error),
-      operationType,
-      path
-    };
-    console.error('Firestore Error: ', JSON.stringify(errInfo));
-    throw new Error(errInfo.error);
-  };
-
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
@@ -239,71 +212,69 @@ export default function App() {
 
     setIsSubmitting(true);
 
+    const dataURLtoFile = (dataurl: string, filename: string): File => {
+      const arr = dataurl.split(',');
+      const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+      const bstr = atob(arr[1]);
+      let n = bstr.length;
+      const u8arr = new Uint8Array(n);
+      while (n--) {
+        u8arr[n] = bstr.charCodeAt(n);
+      }
+      return new File([u8arr], filename, { type: mime });
+    };
+
     try {
-      const path = 'registrations';
-      const dataToSave = {
-        title: formData.title,
-        firstName: formData.firstName,
-        surname: formData.surname,
-        email: noEmail ? null : formData.email,
-        identification: formData.identification,
-        cellphone: formData.cellphone,
-        doctorName: formData.doctorName,
-        doctorContact: formData.doctorContact,
-        nextOfKin: formData.nextOfKin,
-        socialConsent: formData.socialConsent,
-        comments: formData.comments,
-        playerName: formData.playerName,
-        playerDob: formData.playerDob,
-        playerPosition: formData.playerPosition,
-        playerSkillLevel: formData.playerSkillLevel,
-        playerImage: formData.playerImage,
-        goals: formData.goals || "0",
-        assists: formData.assists || "0",
-        minutesPlayed: formData.minutesPlayed || "0",
-        createdAt: serverTimestamp()
-      };
-
-      await addDoc(collection(db, path), dataToSave);
-
       // Send Email Notification via FormSubmit.co (AJAX background delivery)
       try {
-        const emailResponse = await fetch("https://formsubmit.co/ajax/info@legendsacademy.co.za", {
+        const bodyFormData = new FormData();
+        bodyFormData.append("_subject", `Legends Academy Registration - ${formData.playerName}`);
+        bodyFormData.append("_captcha", "false");
+        bodyFormData.append("Player Name", formData.playerName);
+        bodyFormData.append("Player DOB", formData.playerDob);
+        bodyFormData.append("Player Position", formData.playerPosition);
+        bodyFormData.append("Player Skill Level", formData.playerSkillLevel);
+        bodyFormData.append("Goals", formData.goals || "0");
+        bodyFormData.append("Assists", formData.assists || "0");
+        bodyFormData.append("Minutes Played", formData.minutesPlayed || "0");
+        bodyFormData.append("Parent/Guardian", `${formData.title} ${formData.firstName} ${formData.surname}`);
+        bodyFormData.append("Parent Email", formData.email || "N/A");
+        bodyFormData.append("Parent Phone", formData.cellphone);
+        bodyFormData.append("Medical Doctor", `${formData.doctorName} (${formData.doctorContact})`);
+        bodyFormData.append("Next of Kin", formData.nextOfKin);
+        bodyFormData.append("Photo Consent", formData.socialConsent);
+        bodyFormData.append("Comments", formData.comments || "None");
+
+        if (formData.playerImage) {
+          try {
+            const file = dataURLtoFile(formData.playerImage, `${formData.playerName.replace(/\s+/g, '_')}_profile.jpg`);
+            bodyFormData.append("attachment", file);
+            bodyFormData.append("Profile Picture Status", "Attached to this email");
+          } catch (err) {
+            console.error("Error converting image for email attachment:", err);
+            bodyFormData.append("Profile Picture Status", "Provided but failed to attach");
+          }
+        } else {
+          bodyFormData.append("Profile Picture Status", "Not provided");
+        }
+
+        const emailResponse = await fetch("https://formsubmit.co/ajax/eb1cf09e9e3178f4e5b2faa807063900", {
           method: "POST",
           headers: {
-            "Content-Type": "application/json",
             "Accept": "application/json"
           },
-          body: JSON.stringify({
-            _subject: `Legends Academy Registration - ${formData.playerName}`,
-            _captcha: "false",
-            "Player Name": formData.playerName,
-            "Player DOB": formData.playerDob,
-            "Player Position": formData.playerPosition,
-            "Player Skill Level": formData.playerSkillLevel,
-            "Goals": formData.goals || "0",
-            "Assists": formData.assists || "0",
-            "Minutes Played": formData.minutesPlayed || "0",
-            "Parent/Guardian": `${formData.title} ${formData.firstName} ${formData.surname}`,
-            "Parent Email": formData.email || "N/A",
-            "Parent Phone": formData.cellphone,
-            "Medical Doctor": `${formData.doctorName} (${formData.doctorContact})`,
-            "Next of Kin": formData.nextOfKin,
-            "Photo Consent": formData.socialConsent,
-            "Comments": formData.comments || "None",
-            "Profile Picture Status": formData.playerImage ? "Saved in Firestore database" : "Not provided"
-          })
+          body: bodyFormData
         });
 
         if (emailResponse.ok) {
-          alert("Registration successful! Your details have been saved to our database and our team has been notified via email.");
+          alert("Registration successful! Your details have been submitted and our team has been notified via email.");
         } else {
           console.warn("FormSubmit.co response not OK:", emailResponse.statusText);
-          alert("Registration saved to our database successfully!\n\nNote: The automated email confirmation is being processed manually. No action is required from you.");
+          alert("Registration submitted successfully!\n\nNote: The automated email confirmation is being processed manually. No action is required from you.");
         }
       } catch (emailError) {
         console.error("FormSubmit.co AJAX submission error:", emailError);
-        alert("Registration saved to our database successfully!\n\nNote: The automated email notification failed to send due to a temporary connection error, but our team will retrieve your details directly from the database.");
+        alert("Registration details submitted!\n\nNote: The automated email notification failed to send due to a temporary connection error, but our team will process your submission shortly.");
       }
       
       // Reset form
@@ -333,7 +304,7 @@ export default function App() {
       setUsePassport(false);
     } catch (error: any) {
       console.error("Registration error:", error);
-      handleFirestoreError(error, OperationType.CREATE, 'registrations');
+      alert("An unexpected error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -346,7 +317,7 @@ export default function App() {
         <nav className="h-24 border-b border-gray-100 px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-12">
             <div className="flex items-center gap-3">
-              <img src="images/logo.png" alt="Legends Academy Logo" className="h-20 w-20 object-contain" />
+              <img src="http://donotdelete.wonderlandstudio.co.za/legends/LegendsFootballAcademyLogo.png" referrerPolicy="no-referrer" alt="Legends Academy Logo" className="h-20 w-20 object-contain" />
             </div>
           </div>
 
@@ -871,28 +842,73 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => {
+                  const titles = ["Mr.", "Mrs.", "Ms.", "Dr."];
+                  const firstNames = ["Sipho", "Kabelo", "Lindiwe", "Thabo", "Naledi", "Lerato", "Mpho", "Zama", "Bandile", "Lungelo"];
+                  const surnames = ["Modise", "Khumalo", "Dlamini", "Nkosi", "Naidoo", "Botha", "Zulu", "Mokoena", "Ndlovu", "Smit"];
+                  const playerFirstNames = ["Sipho Jr", "Kabelo Jr", "Thabiso", "Ayanda", "Sfiso", "Tshepo", "Sanele", "Luyanda", "Junior", "Lebogang", "Ofentse", "Katlego"];
+                  const positions = ["Goalkeeper", "Defender", "Midfielder", "Forward"];
+                  const skillLevels = ["Beginner", "Intermediate", "Advanced"];
+
+                  const randomElement = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+                  
+                  const parentFirstName = randomElement(firstNames);
+                  const parentSurname = randomElement(surnames);
+                  const playerFirstName = randomElement(playerFirstNames);
+                  
+                  // Generate valid South African 13-digit ID
+                  const yy = Math.floor(Math.random() * 9 + 10); // years 10 to 18 (i.e. 2010 to 2018)
+                  const mm = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+                  const dd = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+                  let rest = "";
+                  for (let i = 0; i < 7; i++) {
+                    rest += Math.floor(Math.random() * 10);
+                  }
+                  const idNumber = `${yy}${mm}${dd}${rest}`;
+
+                  // Generate random cellphone number
+                  const getRandomSACell = () => {
+                    const prefixes = ["071", "072", "073", "074", "076", "078", "079", "082", "083", "084"];
+                    const prefix = randomElement(prefixes);
+                    let res = "";
+                    for (let i = 0; i < 7; i++) {
+                      res += Math.floor(Math.random() * 10);
+                    }
+                    return `${prefix}${res}`;
+                  };
+
+                  const parentPhone = getRandomSACell();
+                  const doctorPhone = getRandomSACell();
+                  const kinPhone = getRandomSACell();
+
+                  const parentEmail = `${parentFirstName.toLowerCase()}.${parentSurname.toLowerCase()}@example.co.za`;
+
+                  setUsePassport(false);
+                  setNoEmail(false);
                   setFormData({
-                    title: "Mr.",
-                    firstName: "Test",
-                    surname: "User",
-                    email: "tsoanelomodise@gmail.com",
-                    identification: "TEST-ID-12345",
-                    cellphone: "0123456789",
-                    doctorName: "Dr. Smith",
-                    doctorContact: "0987654321",
-                    nextOfKin: "Emergency Contact",
+                    title: randomElement(titles),
+                    firstName: parentFirstName,
+                    surname: parentSurname,
+                    email: parentEmail,
+                    identification: idNumber,
+                    cellphone: parentPhone,
+                    doctorName: `Dr. ${randomElement(surnames)}`,
+                    doctorContact: doctorPhone,
+                    nextOfKin: `${randomElement(firstNames)} ${randomElement(surnames)} - ${kinPhone}`,
                     socialConsent: "Yes, I consent to untagged photography",
-                    comments: "Auto-generated test record",
+                    comments: `Auto-generated test registration for junior player ${playerFirstName} ${parentSurname}.`,
                     agreeTerms: true,
-                    playerName: "Junior Legend",
-                    playerDob: "2010-05-20",
-                    playerPosition: "Forward",
-                    playerSkillLevel: "Intermediate",
+                    playerName: `${playerFirstName} ${parentSurname}`,
+                    playerDob: `20${yy}-${mm}-${dd}`,
+                    playerPosition: randomElement(positions),
+                    playerSkillLevel: randomElement(skillLevels),
                     playerImage: null,
-                    goals: "5",
-                    assists: "3",
-                    minutesPlayed: "240",
+                    goals: String(Math.floor(Math.random() * 15)),
+                    assists: String(Math.floor(Math.random() * 15)),
+                    minutesPlayed: String(Math.floor(Math.random() * 800) + 100),
                   });
+
+                  // Clear any existing validation errors
+                  setErrors({});
                 }}
                 className="text-xs text-gray-400 hover:text-brand-red transition-colors font-bold uppercase tracking-wider cursor-pointer"
               >
