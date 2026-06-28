@@ -379,6 +379,53 @@ export default function App() {
             style={{ backgroundImage: "url('https://donotdelete.wonderlandstudio.co.za/legends/SoccerPitch.jpg')" }}
           />
           
+          {/* Logo overlay in the center of the soccer pitch */}
+          <div className="relative z-10 flex flex-col items-center justify-center pointer-events-none p-4">
+            <div className="relative flex items-center justify-center h-48 w-48 md:h-64 md:w-64">
+              {/* SVG Curved Text around the logo */}
+              <svg 
+                className="absolute inset-0 w-full h-full select-none" 
+                viewBox="0 0 200 200"
+              >
+                <defs>
+                  {/* Upper curve path for top text (clockwise) */}
+                  <path 
+                    id="curve-top" 
+                    d="M 30,100 A 70,70 0 0,1 170,100" 
+                    fill="none" 
+                  />
+                  {/* Lower curve path for bottom text (clockwise) */}
+                  <path 
+                    id="curve-bottom" 
+                    d="M 170,100 A 70,70 0 0,1 30,100" 
+                    fill="none" 
+                  />
+                </defs>
+                
+                {/* Upper Text */}
+                <text className="font-sans font-black tracking-[0.25em] text-[13px] uppercase fill-brand-red drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">
+                  <textPath href="#curve-top" startOffset="50%" textAnchor="middle">
+                    Soccer
+                  </textPath>
+                </text>
+                
+                {/* Bottom Text */}
+                <text className="font-sans font-black tracking-[0.25em] text-[13px] uppercase fill-brand-red drop-shadow-[0_4px_8px_rgba(0,0,0,0.9)]">
+                  <textPath href="#curve-bottom" startOffset="50%" textAnchor="middle">
+                    Legends
+                  </textPath>
+                </text>
+              </svg>
+
+              <img 
+                src="http://donotdelete.wonderlandstudio.co.za/legends/LegendsFootballAcademyLogo.png" 
+                referrerPolicy="no-referrer"
+                alt="Legends Academy Center Logo" 
+                className="absolute h-24 w-24 md:h-36 md:w-36 object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.6)] select-none"
+              />
+            </div>
+          </div>
+          
           {/* Graphical elements matching the image */}
           <div className="absolute bottom-8 left-8 flex space-x-4 opacity-30">
             <div className="w-16 h-1.5 bg-white/50 rounded-full overflow-hidden">
