@@ -327,7 +327,7 @@ export default function App() {
         <section className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-center shrink-0">
           <div 
             className="absolute inset-0 bg-cover bg-center"
-            style={{ backgroundImage: "url('images/background.png')" }}
+            style={{ backgroundImage: "url('https://donotdelete.wonderlandstudio.co.za/legends/SoccerPitch.jpg')" }}
           />
           
           {/* Graphical elements matching the image */}
