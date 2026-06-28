@@ -6,7 +6,8 @@ import {
   Camera,
   Calendar,
   Menu,
-  X
+  X,
+  ChevronDown
 } from "lucide-react";
 import { 
   BespokeUsers,
@@ -19,9 +20,10 @@ import {
   BespokeUpload,
   BespokeAlertCircle,
   BespokeCheck,
-  BespokeArrowRight
+  BespokeArrowRight,
+  BespokeArrowUp
 } from "./components/BespokeIcons";
-import { useState, ChangeEvent, FormEvent } from "react";
+import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import AnimatedPitch from "./components/AnimatedPitch";
 
 interface FormData {
@@ -33,6 +35,8 @@ interface FormData {
   cellphone: string;
   doctorName: string;
   doctorContact: string;
+  medicalAid: string;
+  medicalAidNumber: string;
   nextOfKin: string;
   socialConsent: string;
   comments: string;
@@ -64,8 +68,15 @@ export default function App() {
   
   const menuItems = [
     { label: "Guardian Registration", target: "guardian-registration", icon: BespokeUsers },
-    { label: "Player Detail", target: "player-detail", icon: BespokeUser },
-    { label: "Player Statistics", target: "player-statistics", icon: BespokeBarChart3 },
+    { 
+      label: "Player Detail", 
+      target: "player-detail", 
+      icon: BespokeUser,
+      subItems: [
+        { label: "General Details", target: "player-detail", icon: BespokeUser },
+        { label: "Player Statistics", target: "player-statistics", icon: BespokeBarChart3 }
+      ]
+    },
     { label: "Fees", target: "fees", icon: BespokeCreditCard }
   ];
 
@@ -85,6 +96,8 @@ export default function App() {
     cellphone: "",
     doctorName: "",
     doctorContact: "",
+    medicalAid: "",
+    medicalAidNumber: "",
     nextOfKin: "",
     socialConsent: "Yes, I consent to untagged photography",
     comments: "",
@@ -106,6 +119,32 @@ export default function App() {
 
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
+
+  useEffect(() => {
+    const container = document.getElementById("form-scroll-container");
+    if (!container) return;
+
+    const handleScroll = () => {
+      if (container.scrollTop > 300) {
+        setShowScrollTop(true);
+      } else {
+        setShowScrollTop(false);
+      }
+    };
+
+    container.addEventListener("scroll", handleScroll);
+    return () => {
+      container.removeEventListener("scroll", handleScroll);
+    };
+  }, []);
+
+  const scrollToTop = () => {
+    const container = document.getElementById("form-scroll-container");
+    if (container) {
+      container.scrollTo({ top: 0, behavior: "smooth" });
+    }
+  };
 
   const calculateAge = (dob: string) => {
     if (!dob) return null;
@@ -365,7 +404,7 @@ export default function App() {
       // Send Email Notification via FormSubmit.co (AJAX background delivery)
       try {
         const bodyFormData = new FormData();
-        bodyFormData.append("_subject", `Legends Academy Registration - ${formData.playerName}`);
+        bodyFormData.append("_subject", "Someone just submitted your form on the Legends academy registration online form");
         bodyFormData.append("_captcha", "false");
         bodyFormData.append("Player Name", formData.playerName);
         bodyFormData.append("Player DOB", formData.playerDob);
@@ -378,6 +417,8 @@ export default function App() {
         bodyFormData.append("Parent Email", formData.email || "N/A");
         bodyFormData.append("Parent Phone", formData.cellphone);
         bodyFormData.append("Medical Doctor", `${formData.doctorName} (${formData.doctorContact})`);
+        bodyFormData.append("Medical Aid", formData.medicalAid || "None");
+        bodyFormData.append("Medical Aid Member Number", formData.medicalAidNumber || "None");
         bodyFormData.append("Next of Kin", formData.nextOfKin);
         bodyFormData.append("Photo Consent", formData.socialConsent);
         bodyFormData.append("Comments", formData.comments || "None");
@@ -509,6 +550,37 @@ export default function App() {
           <div className="hidden lg:flex items-center space-x-6">
             {menuItems.map((item) => {
               const Icon = item.icon;
+              if (item.subItems) {
+                return (
+                  <div key={item.target} className="relative group/dropdown py-2">
+                    <button
+                      type="button"
+                      onClick={() => scrollToSection(item.target)}
+                      className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-brand-red transition-all duration-200 focus:outline-none cursor-pointer group"
+                    >
+                      <Icon size={14} className="opacity-75 group-hover:opacity-100 transition-opacity" />
+                      <span>{item.label}</span>
+                      <ChevronDown size={12} className="opacity-50 group-hover:opacity-100 transition-transform duration-200 group-hover:rotate-180" />
+                    </button>
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 bg-white border border-gray-100 rounded-xl shadow-xl py-2 hidden group-hover/dropdown:block z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                      {item.subItems.map((sub) => {
+                        const SubIcon = sub.icon;
+                        return (
+                          <button
+                            key={sub.target}
+                            type="button"
+                            onClick={() => scrollToSection(sub.target)}
+                            className="w-full flex items-center gap-2 px-4 py-2.5 text-left text-xs font-bold uppercase tracking-wider text-slate-600 hover:text-brand-red hover:bg-slate-50 transition-colors focus:outline-none cursor-pointer"
+                          >
+                            <SubIcon size={12} className="opacity-75" />
+                            <span>{sub.label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              }
               return (
                 <button
                   type="button"
@@ -548,6 +620,41 @@ export default function App() {
             >
               {menuItems.map((item) => {
                 const Icon = item.icon;
+                if (item.subItems) {
+                  return (
+                    <div key={item.target} className="flex flex-col space-y-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          scrollToSection(item.target);
+                        }}
+                        className="flex items-center gap-3 p-3 text-sm font-bold uppercase tracking-wider text-slate-700 hover:text-brand-red hover:bg-slate-50 rounded-xl transition-all text-left focus:outline-none cursor-pointer"
+                      >
+                        <Icon size={16} className="text-slate-400" />
+                        <span>{item.label}</span>
+                      </button>
+                      <div className="pl-6 flex flex-col space-y-1 border-l border-gray-100 ml-5">
+                        {item.subItems.map((sub) => {
+                          const SubIcon = sub.icon;
+                          return (
+                            <button
+                              type="button"
+                              key={sub.target}
+                              onClick={() => {
+                                scrollToSection(sub.target);
+                                setMobileMenuOpen(false);
+                              }}
+                              className="flex items-center gap-3 p-2.5 text-xs font-bold uppercase tracking-wider text-slate-500 hover:text-brand-red hover:bg-slate-50 rounded-lg transition-all text-left focus:outline-none cursor-pointer"
+                            >
+                              <SubIcon size={14} className="text-slate-400" />
+                              <span>{sub.label}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  );
+                }
                 return (
                   <button
                     type="button"
@@ -571,28 +678,25 @@ export default function App() {
           <AnimatedPitch />
 
         {/* Scrollable Form Area */}
-        <div className="flex-1 overflow-y-auto p-8 md:p-12">
+        <div id="form-scroll-container" className="flex-1 overflow-y-auto p-8 md:p-12 relative">
           <div className="max-w-3xl mx-auto mb-16">
             
             {/* Camp Information & Banking Details Dashboard */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
               {/* Card 1: Camp Essentials & Provision */}
-              <div className="bg-slate-950 text-white rounded-xl p-6 shadow-md border border-slate-800/60 relative overflow-hidden flex flex-col justify-between">
+              <div style={{ backgroundColor: "#1F1F1F" }} className="text-white rounded-xl p-6 shadow-md border border-zinc-900 relative overflow-hidden flex flex-col justify-between">
                 {/* Background decorative texture with brand red */}
                 <div className="absolute top-0 right-0 w-24 h-24 bg-brand-red/10 rounded-full blur-2xl pointer-events-none" />
                 
                 <div>
                   <div className="flex items-center gap-2 mb-4">
-                    <span className="p-1.5 rounded-lg bg-brand-red/10 border border-brand-red/20 text-brand-red">
-                      <BespokeFileText size={16} />
-                    </span>
-                    <h3 className="font-display font-black text-xs tracking-wider uppercase text-slate-100">Camp Essentials & Provisions</h3>
+                    <h3 className="font-display font-black text-xs tracking-wider uppercase text-neutral-100">Camp Essentials & Provisions</h3>
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <h4 className="text-[10px] uppercase tracking-wider text-brand-red font-black mb-1.5">Legends Will Provide:</h4>
-                      <ul className="grid grid-cols-2 gap-y-1 gap-x-2 text-[11px] text-slate-300">
+                      <ul className="grid grid-cols-2 gap-y-1 gap-x-2 text-[11px] text-neutral-300">
                         <li className="flex items-center gap-1.5">
                           <span className="text-emerald-400 font-bold">✓</span> Water + Refills
                         </li>
@@ -611,15 +715,15 @@ export default function App() {
                         <li className="flex items-center gap-1.5">
                           <span className="text-emerald-400 font-bold">✓</span> Coldrink at end
                         </li>
-                        <li className="flex items-center col-span-2 gap-1.5 mt-0.5 bg-brand-red/10 border border-brand-red/20 px-2 py-0.5 rounded text-slate-100 font-semibold">
+                        <li className="flex items-center col-span-2 gap-1.5 mt-0.5 bg-brand-red/10 border border-brand-red/20 px-2 py-0.5 rounded text-neutral-100 font-semibold">
                           <span className="text-brand-red font-black">★</span> Prepared Lunch Provided
                         </li>
                       </ul>
                     </div>
 
-                    <div className="border-t border-slate-800/80 pt-3">
+                    <div className="border-t border-neutral-800 pt-3">
                       <h4 className="text-[10px] uppercase tracking-wider text-amber-500 font-black mb-1.5">What to Bring Along:</h4>
-                      <ul className="grid grid-cols-2 gap-y-1 gap-x-2 text-[11px] text-slate-300">
+                      <ul className="grid grid-cols-2 gap-y-1 gap-x-2 text-[11px] text-neutral-300">
                         <li className="flex items-center gap-1.5">
                           <span className="text-amber-500 font-bold">•</span> Shin Pads
                         </li>
@@ -640,7 +744,7 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="mt-4 text-[9px] text-slate-400 italic bg-slate-900/60 p-2 rounded border border-slate-800/80">
+                <div className="mt-4 text-[9px] text-neutral-400 italic bg-neutral-950/60 p-2 rounded border border-neutral-800">
                   Please pack what is required to ensure your child remains protected and warm.
                 </div>
               </div>
@@ -650,14 +754,8 @@ export default function App() {
                 <div>
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <span className="p-1.5 rounded-lg bg-emerald-100 text-emerald-600">
-                        <BespokeLock size={16} />
-                      </span>
                       <h3 className="font-display font-bold text-xs tracking-wider uppercase text-gray-800">Fees & Secure Banking</h3>
                     </div>
-                    <span className="text-[9px] bg-brand-red/10 text-brand-red px-2 py-0.5 rounded-full font-black uppercase tracking-wider">
-                      Camp Tuition
-                    </span>
                   </div>
 
                   {/* Pricing Tiers */}
@@ -735,7 +833,6 @@ export default function App() {
             </div>
 
             <div className="mb-10 scroll-mt-6" id="guardian-registration">
-              <span className="text-[10px] uppercase tracking-[0.3em] font-black text-brand-red block mb-3">Form Alpha-03</span>
               <h2 className="text-3xl font-light text-text-main flex items-baseline">
                 Parent / Guardian <span className="font-black ml-2">Registration</span>
               </h2>
@@ -983,6 +1080,30 @@ export default function App() {
               </div>
 
               <div className="flex flex-col">
+                <label className="artistic-label">Medical Aid</label>
+                <input 
+                  type="text" 
+                  name="medicalAid"
+                  value={formData.medicalAid}
+                  onChange={handleInputChange}
+                  placeholder="e.g. Discovery Health" 
+                  className="artistic-input" 
+                />
+              </div>
+
+              <div className="flex flex-col">
+                <label className="artistic-label">Member Number</label>
+                <input 
+                  type="text" 
+                  name="medicalAidNumber"
+                  value={formData.medicalAidNumber}
+                  onChange={handleInputChange}
+                  placeholder="e.g. 123456789" 
+                  className="artistic-input" 
+                />
+              </div>
+
+              <div className="flex flex-col">
                 <label className="artistic-label">Social Media Consent</label>
                 <select 
                   name="socialConsent"
@@ -1036,7 +1157,6 @@ export default function App() {
               {/* Player Registration Section */}
               <div className="col-span-1 md:col-span-2 pt-12 mb-4 scroll-mt-6" id="player-detail">
                 <div className="mb-8">
-                  <span className="text-[10px] uppercase tracking-[0.3em] font-black text-brand-red block mb-2">Form Alpha-03B</span>
                   <h2 className="text-2xl font-light text-text-main flex items-baseline">
                     Player <span className="font-black ml-2">Detail</span>
                   </h2>
@@ -1181,7 +1301,6 @@ export default function App() {
               {/* Player Statistics Section */}
               <div className="col-span-1 md:col-span-2 pt-12 mb-4 scroll-mt-6" id="player-statistics">
                 <div className="mb-8">
-                  <span className="text-[10px] uppercase tracking-[0.3em] font-black text-brand-red block mb-2">Form Alpha-03C</span>
                   <h2 className="text-2xl font-light text-text-main flex items-baseline">
                     Season <span className="font-black ml-2">Statistics</span>
                   </h2>
@@ -1227,7 +1346,6 @@ export default function App() {
               {/* Payment Section (Form Alpha-03D) */}
               <div className="col-span-1 md:col-span-2 pt-12 mb-4 scroll-mt-6" id="fees">
                 <div className="mb-8">
-                  <span className="text-[10px] uppercase tracking-[0.3em] font-black text-brand-red block mb-2">Form Alpha-03D</span>
                   <h2 className="text-2xl font-light text-text-main flex items-baseline">
                     Fees & <span className="font-black ml-2">Payment</span>
                   </h2>
@@ -1478,6 +1596,8 @@ export default function App() {
                     cellphone: parentPhone,
                     doctorName: `Dr. ${randomElement(surnames)}`,
                     doctorContact: doctorPhone,
+                    medicalAid: Math.random() > 0.3 ? "Discovery Health" : "None",
+                    medicalAidNumber: Math.random() > 0.3 ? String(Math.floor(1000000000 + Math.random() * 9000000000)) : "",
                     nextOfKin: `${randomElement(firstNames)} ${randomElement(surnames)} - ${kinPhone}`,
                     socialConsent: "Yes, I consent to untagged photography",
                     comments: `Auto-generated test registration for junior player ${playerFirstName} ${parentSurname}.`,
@@ -1547,6 +1667,24 @@ export default function App() {
             </div>
           </div>
         </footer>
+
+        {/* Back to Top Floating Button */}
+        <AnimatePresence>
+          {showScrollTop && (
+            <motion.button
+              type="button"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.8 }}
+              onClick={scrollToTop}
+              className="absolute bottom-16 right-6 p-3 bg-brand-red text-white rounded-full shadow-lg hover:brightness-110 transition-all duration-200 z-50 cursor-pointer flex items-center justify-center border border-brand-red/30 focus:outline-none"
+              title="Back to Top"
+              aria-label="Scroll to top of registration form"
+            >
+              <BespokeArrowUp size={16} />
+            </motion.button>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

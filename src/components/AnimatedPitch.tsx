@@ -291,14 +291,6 @@ export default function AnimatedPitch() {
             <path d="M4.5 12 L7 10 L8.5 12.5 L6.5 14.5 Z" fill="#475569" opacity="0.8" />
             <path d="M19.5 12 L17 10 L15.5 12.5 L17.5 14.5 Z" fill="#475569" opacity="0.8" />
             <path d="M12 22 L9.5 18.5 L12 16.5 L14.5 18.5 Z" fill="#475569" opacity="0.8" />
-            
-            {/* Center seam detail lines */}
-            <line x1="12" y1="7.5" x2="12" y2="16.5" stroke="#475569" strokeWidth="1" opacity="0.7" />
-            <line x1="8.5" y1="12.5" x2="15.5" y2="12.5" stroke="#475569" strokeWidth="1" opacity="0.7" />
-            <line x1="9.5" y1="5.5" x2="7" y2="10" stroke="#475569" strokeWidth="1" opacity="0.7" />
-            <line x1="14.5" y1="5.5" x2="17" y2="10" stroke="#475569" strokeWidth="1" opacity="0.7" />
-            <line x1="9.5" y1="18.5" x2="6.5" y2="14.5" stroke="#475569" strokeWidth="1" opacity="0.7" />
-            <line x1="14.5" y1="18.5" x2="17.5" y2="14.5" stroke="#475569" strokeWidth="1" opacity="0.7" />
           </svg>
         </div>
       </motion.div>

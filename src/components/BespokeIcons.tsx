@@ -320,3 +320,26 @@ export const BespokeArrowRight: React.FC<IconProps> = ({ size = 14, className, .
     </svg>
   );
 };
+
+/**
+ * BespokeArrowUp - Sleek upward vector arrow for scrolling back to top.
+ */
+export const BespokeArrowUp: React.FC<IconProps> = ({ size = 14, className, ...props }) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+      {...props}
+    >
+      <line x1="12" y1="20" x2="12" y2="4" />
+      <polyline points="5 11 12 4 19 11" />
+    </svg>
+  );
+};
