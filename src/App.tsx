@@ -122,6 +122,7 @@ export default function App() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState("guardian-registration");
+  const [showErrorPopup, setShowErrorPopup] = useState(false);
 
   useEffect(() => {
     const container = document.getElementById("form-scroll-container");
@@ -341,7 +342,7 @@ export default function App() {
     reader.readAsDataURL(file);
   };
 
-  const validate = (): boolean => {
+  const validate = (): { isValid: boolean; errors: FormErrors } => {
     const newErrors: FormErrors = {};
 
     if (!formData.firstName.trim()) newErrors.firstName = "First name is required";
@@ -385,20 +386,135 @@ export default function App() {
     }
 
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    return { isValid: Object.keys(newErrors).length === 0, errors: newErrors };
+  };
+
+  // Helper to map field keys to human-friendly labels
+  const ERROR_LABELS: Record<string, string> = {
+    firstName: "Parent First Name",
+    surname: "Parent Surname",
+    email: "Parent Email Address",
+    identification: usePassport ? "Parent Passport Number" : "Parent ID Number",
+    cellphone: "Parent Cellphone Number",
+    doctorName: "Doctor Name",
+    doctorContact: "Doctor Contact",
+    nextOfKin: "Next of Kin Contact",
+    playerName: "Player Full Name",
+    playerDob: "Player Date of Birth",
+    agreeTerms: "Terms & Conditions Agreement",
+    selectedDays: "Camp Session Selection",
+    agreeIndemnity: "Injury & Theft Indemnity Waiver"
+  };
+
+  // Helper to map field keys to scrollable section IDs
+  const FIELD_TO_SECTION_MAP: Record<string, string> = {
+    firstName: "guardian-registration",
+    surname: "guardian-registration",
+    email: "guardian-registration",
+    identification: "guardian-registration",
+    cellphone: "guardian-registration",
+    doctorName: "guardian-registration",
+    doctorContact: "guardian-registration",
+    nextOfKin: "guardian-registration",
+    playerName: "player-detail",
+    playerDob: "player-detail",
+    agreeTerms: "guardian-registration",
+    selectedDays: "fees",
+    agreeIndemnity: "terms-conditions"
+  };
+
+  // Dynamic calculator of remaining checklist requirements
+  const getOutstandingRequirements = () => {
+    const reqs: { key: string; label: string; description: string }[] = [];
+
+    if (!formData.firstName.trim()) {
+      reqs.push({ key: "firstName", label: ERROR_LABELS.firstName, description: "First name is required" });
+    }
+    if (!formData.surname.trim()) {
+      reqs.push({ key: "surname", label: ERROR_LABELS.surname, description: "Surname is required" });
+    }
+    if (!noEmail) {
+      if (!formData.email.trim()) {
+        reqs.push({ key: "email", label: ERROR_LABELS.email, description: "Email is required" });
+      } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+        reqs.push({ key: "email", label: ERROR_LABELS.email, description: "Please enter a valid email address" });
+      }
+    }
+    if (!formData.identification.trim()) {
+      reqs.push({ key: "identification", label: ERROR_LABELS.identification, description: usePassport ? "Passport number is required" : "ID number is required" });
+    } else if (!usePassport && !/^\d{13}$/.test(formData.identification.replace(/\s/g, ""))) {
+      reqs.push({ key: "identification", label: ERROR_LABELS.identification, description: "South African ID must be 13 digits" });
+    }
+    if (!formData.cellphone.trim()) {
+      reqs.push({ key: "cellphone", label: ERROR_LABELS.cellphone, description: "Cellphone number is required" });
+    } else if (formData.cellphone.replace(/\D/g, "").length < 10) {
+      reqs.push({ key: "cellphone", label: ERROR_LABELS.cellphone, description: "Please enter a valid phone number (min 10 digits)" });
+    }
+    if (!formData.doctorName.trim()) {
+      reqs.push({ key: "doctorName", label: ERROR_LABELS.doctorName, description: "Doctor name is required" });
+    }
+    if (!formData.doctorContact.trim()) {
+      reqs.push({ key: "doctorContact", label: ERROR_LABELS.doctorContact, description: "Doctor contact is required" });
+    }
+    if (!formData.nextOfKin.trim()) {
+      reqs.push({ key: "nextOfKin", label: ERROR_LABELS.nextOfKin, description: "Next of kin contact is required" });
+    }
+
+    if (!formData.playerName.trim()) {
+      reqs.push({ key: "playerName", label: ERROR_LABELS.playerName, description: "Player name is required" });
+    }
+    if (!formData.playerDob) {
+      reqs.push({ key: "playerDob", label: ERROR_LABELS.playerDob, description: "Date of birth is required" });
+    }
+
+    if (formData.selectedDays.length === 0) {
+      reqs.push({ key: "selectedDays", label: ERROR_LABELS.selectedDays, description: "You must select at least one session of attendance" });
+    }
+
+    if (!formData.agreeTerms) {
+      reqs.push({ key: "agreeTerms", label: ERROR_LABELS.agreeTerms, description: "You must agree to the terms and conditions" });
+    }
+
+    if (!formData.agreeIndemnity) {
+      reqs.push({ key: "agreeIndemnity", label: ERROR_LABELS.agreeIndemnity, description: "You must accept the indemnity waiver to register" });
+    }
+
+    return reqs;
+  };
+
+  const handleNavigateToError = (fieldKey: string) => {
+    let element = document.getElementsByName(fieldKey)[0];
+    if (!element) {
+      element = document.getElementById(fieldKey);
+    }
+
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (element instanceof HTMLInputElement || element instanceof HTMLSelectElement || element instanceof HTMLTextAreaElement) {
+        element.focus();
+      }
+    } else {
+      const sectionId = FIELD_TO_SECTION_MAP[fieldKey];
+      if (sectionId) {
+        const sectionElement = document.getElementById(sectionId);
+        if (sectionElement) {
+          sectionElement.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      }
+    }
   };
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
-    if (!validate()) {
+    const validation = validate();
+    if (!validation.isValid) {
       setIsSubmitting(false);
+      setShowErrorPopup(true);
+      
       // Scroll to first error
-      const firstError = Object.keys(errors)[0];
-      const element = document.getElementsByName(firstError)[0];
-      if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-      }
+      const firstError = Object.keys(validation.errors)[0];
+      handleNavigateToError(firstError);
       return;
     }
 
@@ -1906,6 +2022,176 @@ export default function App() {
             </div>
           </div>
         </footer>
+
+        {/* Floating Form Status / Checklist Button */}
+        <div className="fixed bottom-6 left-6 md:bottom-8 md:left-8 z-[999]">
+          {(() => {
+            const outstanding = getOutstandingRequirements();
+            const count = outstanding.length;
+            const isAllComplete = count === 0;
+
+            return (
+              <motion.button
+                type="button"
+                onClick={() => setShowErrorPopup(true)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className={`flex items-center gap-2.5 px-4 py-3 rounded-full shadow-2xl border text-xs font-bold uppercase tracking-wider backdrop-blur-md transition-all duration-300 focus:outline-none cursor-pointer ${
+                  isAllComplete
+                    ? "bg-emerald-600 border-emerald-500 text-white shadow-emerald-500/20"
+                    : "bg-slate-900/95 border-slate-800 text-white shadow-slate-900/40 hover:bg-slate-900"
+                }`}
+                title="View Registration Checklist"
+              >
+                {isAllComplete ? (
+                  <>
+                    <BespokeCheck size={14} className="text-white" />
+                    <span>Ready to Register</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="relative flex h-2 w-2">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-red opacity-75"></span>
+                      <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-red"></span>
+                    </span>
+                    <span>{count} {count === 1 ? "Requirement" : "Requirements"} Left</span>
+                  </>
+                )}
+              </motion.button>
+            );
+          })()}
+        </div>
+
+        {/* Beautiful Interactive Registration Checklist Dialog / Modal Popup */}
+        <AnimatePresence>
+          {showErrorPopup && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 15 }}
+                transition={{ type: "spring", duration: 0.5 }}
+                className="bg-white rounded-2xl shadow-3xl border border-gray-100 max-w-md w-full overflow-hidden flex flex-col max-h-[85vh]"
+              >
+                {/* Header */}
+                <div className="p-6 border-b border-gray-100 bg-slate-50 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-brand-red/10 rounded-xl text-brand-red">
+                      <BespokeAlertCircle size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-black text-slate-900 text-base leading-tight">Registration Checklist</h3>
+                      <p className="text-[10px] text-gray-500 font-bold uppercase tracking-wider mt-0.5">Legends Academy Form Helper</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowErrorPopup(false)}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-slate-600 hover:bg-gray-100 transition-all cursor-pointer focus:outline-none"
+                    aria-label="Close checklist"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Body Content / List */}
+                <div className="p-6 overflow-y-auto space-y-4 flex-1">
+                  {(() => {
+                    const outstanding = getOutstandingRequirements();
+
+                    if (outstanding.length === 0) {
+                      return (
+                        <div className="py-8 text-center flex flex-col items-center justify-center">
+                          <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mb-4">
+                            <BespokeCheck size={24} />
+                          </div>
+                          <h4 className="text-slate-900 font-bold text-sm">All Fields Completed!</h4>
+                          <p className="text-xs text-gray-500 mt-1 max-w-[280px]">
+                            You have filled in all the required information. You are ready to click "Register" and secure your spot!
+                          </p>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <>
+                        <p className="text-xs text-gray-500 leading-relaxed">
+                          Please tap any field below to jump directly to that part of the registration form:
+                        </p>
+                        <div className="space-y-2 mt-2">
+                          {outstanding.map((req) => (
+                            <button
+                              key={req.key}
+                              type="button"
+                              onClick={() => {
+                                setShowErrorPopup(false);
+                                // Ensure slight delay so modal closure doesn't conflict with layout shift calculation
+                                setTimeout(() => {
+                                  handleNavigateToError(req.key);
+                                }, 150);
+                              }}
+                              className="w-full text-left p-3.5 rounded-xl border border-gray-100 hover:border-brand-red/30 hover:bg-red-50/10 transition-all flex items-start gap-3 group cursor-pointer focus:outline-none focus:ring-2 focus:ring-brand-red/20"
+                            >
+                              <div className="p-1 bg-red-50 rounded-lg text-brand-red shrink-0 group-hover:bg-brand-red/10 transition-all">
+                                <BespokeAlertCircle size={14} />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs font-black text-slate-800 uppercase tracking-wider group-hover:text-brand-red transition-colors flex items-center gap-1.5">
+                                  {req.label}
+                                </div>
+                                <div className="text-[11px] text-gray-400 font-medium mt-0.5 group-hover:text-gray-500 transition-colors">
+                                  {req.description}
+                                </div>
+                              </div>
+                              <div className="self-center text-gray-300 group-hover:text-brand-red group-hover:translate-x-0.5 transition-all">
+                                <BespokeArrowRight size={14} />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    );
+                  })()}
+                </div>
+
+                {/* Footer */}
+                <div className="p-6 border-t border-gray-100 shrink-0 flex items-center justify-between bg-slate-50">
+                  {(() => {
+                    const totalFields = 13;
+                    const outstanding = getOutstandingRequirements();
+                    const completed = Math.max(0, totalFields - outstanding.length);
+                    const percent = Math.min(100, Math.round((completed / totalFields) * 100));
+
+                    return (
+                      <>
+                        <div className="flex-1 mr-4">
+                          <div className="flex justify-between text-[10px] font-black uppercase tracking-wider text-slate-500 mb-1.5">
+                            <span>Progress</span>
+                            <span>{completed}/{totalFields} Required</span>
+                          </div>
+                          <div className="w-full bg-gray-200 h-1.5 rounded-full overflow-hidden">
+                            <div
+                              className="bg-brand-red h-full rounded-full transition-all duration-500"
+                              style={{ width: `${percent}%` }}
+                            />
+                          </div>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => setShowErrorPopup(false)}
+                          className="btn-artistic-primary py-2 px-4 text-xs shrink-0"
+                        >
+                          Got It
+                        </button>
+                      </>
+                    );
+                  })()}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
 
         {/* Back to Top Floating Button */}
         <AnimatePresence>
