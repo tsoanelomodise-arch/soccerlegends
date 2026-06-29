@@ -1836,11 +1836,14 @@ export default function App() {
                     formData.playerDob
                   );
                 } else if (sect.id === "player-statistics") {
-                  isComplete = !!(
-                    formData.goals.toString().trim() !== "" &&
-                    formData.assists.toString().trim() !== "" &&
-                    formData.minutesPlayed.toString().trim() !== ""
-                  );
+                  // Season statistics are complete if they are valid numbers (including 0) or left empty (implicit 0)
+                  const g = formData.goals.toString().trim();
+                  const a = formData.assists.toString().trim();
+                  const m = formData.minutesPlayed.toString().trim();
+                  const isValidG = g === "" || !isNaN(Number(g));
+                  const isValidA = a === "" || !isNaN(Number(a));
+                  const isValidM = m === "" || !isNaN(Number(m));
+                  isComplete = isValidG && isValidA && isValidM;
                 } else if (sect.id === "fees") {
                   isComplete = !!(
                     formData.selectedDays.length > 0
