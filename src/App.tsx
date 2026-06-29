@@ -424,26 +424,116 @@ export default function App() {
         }
       }
 
-      // 3. Send registration payload to our server API route
-      const response = await fetch("/api/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          formData: {
-            ...formData,
-            playerImageCloudUrl,
-            proofOfPaymentCloudUrl
-          }
-        })
-      });
+      // Helper to submit directly to FormSubmit from the client side in case backend is absent (static deployment on GitHub / cPanel)
+      const submitDirectlyToFormSubmit = async (pImgUrl: string | null, popUrl: string | null): Promise<boolean> => {
+        try {
+          const bodyFormData = new FormData();
+          bodyFormData.append("_subject", "Someone just submitted your form on the Legends academy registration online form");
+          bodyFormData.append("_captcha", "false");
+          bodyFormData.append("_cc", "lennoxmolehe@gmail.com");
+          bodyFormData.append("Player Name", formData.playerName);
+          bodyFormData.append("Player DOB", formData.playerDob);
+          bodyFormData.append("Player Position", formData.playerPosition);
+          bodyFormData.append("Player Skill Level", formData.playerSkillLevel);
+          bodyFormData.append("Goals", formData.goals || "0");
+          bodyFormData.append("Assists", formData.assists || "0");
+          bodyFormData.append("Minutes Played", formData.minutesPlayed || "0");
+          bodyFormData.append("Parent/Guardian", `${formData.title} ${formData.firstName} ${formData.surname}`);
+          bodyFormData.append("Parent Email", formData.email || "N/A");
+          bodyFormData.append("Parent Phone", formData.cellphone);
+          bodyFormData.append("Medical Doctor", `${formData.doctorName} (${formData.doctorContact})`);
+          bodyFormData.append("Medical Aid", formData.medicalAid || "None");
+          bodyFormData.append("Medical Aid Member Number", formData.medicalAidNumber || "None");
+          bodyFormData.append("Next of Kin", formData.nextOfKin);
+          bodyFormData.append("Photo Consent", formData.socialConsent);
+          bodyFormData.append("Comments", formData.comments || "None");
+          bodyFormData.append("Registration Type", formData.registrationType === "weekly" ? "Weekly (R900)" : "Daily (R250/day)");
+          bodyFormData.append("Selected Sessions of Attendance", (formData.selectedDays || []).join(", "));
+          bodyFormData.append("Injury & Theft Indemnity Agreed", formData.agreeIndemnity ? "Yes (Agreed to Camp Policy)" : "No");
 
-      if (response.ok) {
+          if (formData.playerImage) {
+            try {
+              const fileObj = dataURLtoFile(formData.playerImage, `${formData.playerName.replace(/\s+/g, '_')}_profile.jpg`);
+              bodyFormData.append("attachment", fileObj);
+              if (pImgUrl) {
+                bodyFormData.append("Player Profile Picture Link", pImgUrl);
+                bodyFormData.append("Profile Picture Status", "Uploaded to cloud storage & attached as file");
+              } else {
+                bodyFormData.append("Profile Picture Status", "Attached as file only");
+              }
+            } catch (err) {
+              console.error("Error attaching player image in direct submission:", err);
+            }
+          }
+
+          if (formData.proofOfPayment) {
+            try {
+              const ext = formData.proofOfPaymentName.split('.').pop() || 'jpg';
+              const fileObj = dataURLtoFile(formData.proofOfPayment, `${formData.playerName.replace(/\s+/g, '_')}_pop.${ext}`);
+              bodyFormData.append("attachment2", fileObj);
+              if (popUrl) {
+                bodyFormData.append("Proof of Payment Link", popUrl);
+                bodyFormData.append("Proof of Payment Status", "Uploaded to cloud & attached as file");
+              } else {
+                bodyFormData.append("Proof of Payment Status", "Attached as file only");
+              }
+            } catch (err) {
+              console.error("Error attaching POP in direct submission:", err);
+            }
+          }
+
+          const emailResponse = await fetch("https://formsubmit.co/ajax/eb1cf09e9e3178f4e5b2faa807063900", {
+            method: "POST",
+            headers: {
+              "Accept": "application/json"
+            },
+            body: bodyFormData
+          });
+
+          return emailResponse.ok;
+        } catch (err) {
+          console.error("Direct FormSubmit submission failed:", err);
+          return false;
+        }
+      };
+
+      // 3. Send registration payload to our server API route
+      let isRegistrationSuccessful = false;
+      try {
+        const response = await fetch("/api/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            formData: {
+              ...formData,
+              playerImageCloudUrl,
+              proofOfPaymentCloudUrl
+            }
+          })
+        });
+
+        if (response.ok) {
+          isRegistrationSuccessful = true;
+        } else {
+          console.warn("Backend registration endpoint failed, attempting direct submission to FormSubmit.co...");
+        }
+      } catch (apiErr) {
+        console.warn("Express backend not available (e.g. running as a static site on GitHub Pages/cPanel). Falling back to direct client-side FormSubmit.co submission...", apiErr);
+      }
+
+      // If backend failed/not available, fall back to direct submission
+      if (!isRegistrationSuccessful) {
+        const directSuccess = await submitDirectlyToFormSubmit(playerImageCloudUrl, proofOfPaymentCloudUrl);
+        if (directSuccess) {
+          isRegistrationSuccessful = true;
+        }
+      }
+
+      if (isRegistrationSuccessful) {
         alert("Registration successful! Your details have been submitted and our team has been notified via email.");
       } else {
-        const errJson = await response.json().catch(() => ({}));
-        console.warn("Backend proxy registration failed:", errJson);
         alert("Registration submitted successfully!\n\nNote: The automated email confirmation is being processed manually. No action is required from you.");
       }
 
