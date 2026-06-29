@@ -349,25 +349,51 @@ export default function App() {
     setIsSubmitting(true);
 
     const dataURLtoFile = (dataurl: string, filename: string): File => {
-      const arr = dataurl.split(',');
-      const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
-      const bstr = atob(arr[1]);
-      let n = bstr.length;
-      const u8arr = new Uint8Array(n);
-      while (n--) {
-        u8arr[n] = bstr.charCodeAt(n);
+      try {
+        const arr = dataurl.split(',');
+        if (arr.length < 2) {
+          throw new Error("Invalid base64 data URL");
+        }
+        const mime = arr[0].match(/:(.*?);/)?.[1] || 'image/jpeg';
+        const bstr = atob(arr[1]);
+        let n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        while (n--) {
+          u8arr[n] = bstr.charCodeAt(n);
+        }
+        return new File([u8arr], filename, { type: mime });
+      } catch (err) {
+        console.error("Error converting data URL to file:", err);
+        return new File([new Uint8Array(0)], filename, { type: 'image/jpeg' });
       }
-      return new File([u8arr], filename, { type: mime });
     };
 
     const uploadImageToCloud = async (dataUrl: string, filename: string): Promise<string | null> => {
       try {
         const fileObj = dataURLtoFile(dataUrl, filename);
-        const uploadFormData = new FormData();
-        uploadFormData.append("file", fileObj, filename);
 
-        // Try tmpfiles.org upload first (generates direct accessible download link)
+        // 1. Try Pixeldrain (extremely reliable, strong CORS support, direct link)
         try {
+          const uploadFormData = new FormData();
+          uploadFormData.append("file", fileObj, filename);
+          const res = await fetch("https://pixeldrain.com/api/file", {
+            method: "POST",
+            body: uploadFormData
+          });
+          if (res.ok) {
+            const json = await res.json();
+            if (json?.success && json?.id) {
+              return `https://pixeldrain.com/api/file/${json.id}`;
+            }
+          }
+        } catch (pdErr) {
+          console.warn("Pixeldrain upload failed, trying tmpfiles.org fallback:", pdErr);
+        }
+
+        // 2. Try tmpfiles.org upload (generates direct accessible download link)
+        try {
+          const uploadFormData = new FormData();
+          uploadFormData.append("file", fileObj, filename);
           const res = await fetch("https://tmpfiles.org/api/v1/upload", {
             method: "POST",
             body: uploadFormData
@@ -383,16 +409,22 @@ export default function App() {
           console.warn("tmpfiles.org upload failed, trying file.io fallback:", tmpErr);
         }
 
-        // Try file.io as fallback
-        const fallbackRes = await fetch("https://file.io", {
-          method: "POST",
-          body: uploadFormData
-        });
-        if (fallbackRes.ok) {
-          const json = await fallbackRes.json();
-          if (json?.link) {
-            return json.link;
+        // 3. Try file.io as final fallback
+        try {
+          const uploadFormData = new FormData();
+          uploadFormData.append("file", fileObj, filename);
+          const fallbackRes = await fetch("https://file.io", {
+            method: "POST",
+            body: uploadFormData
+          });
+          if (fallbackRes.ok) {
+            const json = await fallbackRes.json();
+            if (json?.link) {
+              return json.link;
+            }
           }
+        } catch (fileIoErr) {
+          console.warn("file.io upload failed:", fileIoErr);
         }
       } catch (err) {
         console.error("All image upload methods failed:", err);
