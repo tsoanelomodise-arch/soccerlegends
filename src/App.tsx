@@ -491,10 +491,42 @@ export default function App() {
     <div className="min-h-screen bg-field-green-light font-sans text-text-main flex flex-col items-center lg:py-12 lg:px-4">
       <main className="w-full max-w-6xl flex-1 flex flex-col bg-white relative lg:rounded-2xl lg:shadow-2xl overflow-hidden min-h-0 lg:min-h-[85vh]">
         {/* Top Nav */}
-        <nav className="h-24 border-b border-gray-100 px-6 md:px-8 flex items-center justify-between shrink-0">
+        <nav className="min-h-24 h-auto border-b border-gray-100 px-6 md:px-8 py-2 flex items-center justify-between shrink-0">
           <div className="flex items-center space-x-4 md:space-x-8">
-            <div className="flex items-center gap-3">
-              <img src="http://donotdelete.wonderlandstudio.co.za/legends/LegendsFootballAcademyLogo.png" referrerPolicy="no-referrer" alt="Legends Academy Logo" className="h-20 w-20 object-contain" />
+            <div className="flex flex-col items-center gap-1 py-1 shrink-0">
+              <img src="http://donotdelete.wonderlandstudio.co.za/legends/LegendsFootballAcademyLogo.png" referrerPolicy="no-referrer" alt="Legends Academy Logo" className="h-14 w-14 object-contain" />
+              <div className="flex items-center gap-2">
+                <a 
+                  href="https://www.facebook.com/profile.php?id=61591183453487&mibextid=wwXIfr&rdid=nn34xXtVESeQnUvi&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1Gp5KV3QAF%2F%3Fmibextid%3DwwXIfr#" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="p-1.5 rounded-full bg-slate-50 text-slate-500 hover:bg-brand-red hover:text-white transition-all shadow-sm border border-slate-200/40 flex items-center justify-center cursor-pointer"
+                  title="Facebook"
+                  id="facebook-social-link"
+                >
+                  <Facebook size={15} />
+                </a>
+                <a 
+                  href="https://instagram.com" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="p-1.5 rounded-full bg-slate-50 text-slate-500 hover:bg-brand-red hover:text-white transition-all shadow-sm border border-slate-200/40 flex items-center justify-center cursor-pointer"
+                  title="Instagram"
+                  id="instagram-social-link"
+                >
+                  <Instagram size={15} />
+                </a>
+                <a 
+                  href="https://twitter.com" 
+                  target="_blank" 
+                  rel="noreferrer" 
+                  className="p-1.5 rounded-full bg-slate-50 text-slate-500 hover:bg-brand-red hover:text-white transition-all shadow-sm border border-slate-200/40 flex items-center justify-center cursor-pointer"
+                  title="Twitter"
+                  id="twitter-social-link"
+                >
+                  <Twitter size={15} />
+                </a>
+              </div>
             </div>
             <div className="h-10 w-px bg-gray-200 hidden xs:block" />
             <h1 className="text-brand-red font-sans font-black tracking-wide text-xs sm:text-sm md:text-xl uppercase select-none line-clamp-2 xs:line-clamp-none">
@@ -636,7 +668,7 @@ export default function App() {
         {/* Scrollable Form Area */}
         <div id="form-scroll-container" className="flex-1 overflow-y-auto p-8 md:p-12 relative">
           <div className="max-w-3xl mx-auto mb-16">
-            
+
             {/* Camp Information & Banking Details Dashboard */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
               {/* Card 1: Camp Essentials & Provision */}
@@ -788,43 +820,10 @@ export default function App() {
               </div>
             </div>
 
-            <div className="mb-10 scroll-mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4" id="guardian-registration">
+            <div className="mb-10 scroll-mt-6" id="guardian-registration">
               <h2 className="text-3xl font-light text-text-main flex items-baseline">
                 Parent / Guardian <span className="font-black ml-2">Registration</span>
               </h2>
-              <div className="flex items-center gap-2.5">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 mr-1">Join the community:</span>
-                <a 
-                  href="https://www.facebook.com/profile.php?id=61591183453487&mibextid=wwXIfr&rdid=nn34xXtVESeQnUvi&share_url=https%3A%2F%2Fwww.facebook.com%2Fshare%2F1Gp5KV3QAF%2F%3Fmibextid%3DwwXIfr#" 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-brand-red hover:text-white transition-all shadow-sm flex items-center justify-center cursor-pointer"
-                  title="Facebook"
-                  id="facebook-social-link"
-                >
-                  <Facebook size={16} />
-                </a>
-                <a 
-                  href="https://instagram.com" 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-brand-red hover:text-white transition-all shadow-sm flex items-center justify-center cursor-pointer"
-                  title="Instagram"
-                  id="instagram-social-link"
-                >
-                  <Instagram size={16} />
-                </a>
-                <a 
-                  href="https://twitter.com" 
-                  target="_blank" 
-                  rel="noreferrer" 
-                  className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-brand-red hover:text-white transition-all shadow-sm flex items-center justify-center cursor-pointer"
-                  title="Twitter"
-                  id="twitter-social-link"
-                >
-                  <Twitter size={16} />
-                </a>
-              </div>
             </div>
 
             <form id="register" onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
