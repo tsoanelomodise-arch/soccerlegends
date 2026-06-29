@@ -1,7 +1,6 @@
 import { motion, AnimatePresence } from "motion/react";
 import { 
   Facebook,
-  Twitter,
   Instagram,
   Camera,
   Calendar,
@@ -21,7 +20,8 @@ import {
   BespokeAlertCircle,
   BespokeCheck,
   BespokeArrowRight,
-  BespokeArrowUp
+  BespokeArrowUp,
+  BespokeTwitterX
 } from "./components/BespokeIcons";
 import { useState, ChangeEvent, FormEvent, useEffect } from "react";
 import AnimatedPitch from "./components/AnimatedPitch";
@@ -521,10 +521,10 @@ export default function App() {
                   target="_blank" 
                   rel="noreferrer" 
                   className="p-1.5 rounded-full bg-slate-50 text-slate-500 hover:bg-brand-red hover:text-white transition-all shadow-sm border border-slate-200/40 flex items-center justify-center cursor-pointer"
-                  title="Twitter"
-                  id="twitter-social-link"
+                  title="X"
+                  id="x-social-link"
                 >
-                  <Twitter size={15} />
+                  <BespokeTwitterX size={15} />
                 </a>
               </div>
             </div>
@@ -1646,8 +1646,8 @@ export default function App() {
               <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-brand-red transition-colors">
                 <Facebook size={14} />
               </a>
-              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-brand-red transition-colors">
-                <Twitter size={14} />
+              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-brand-red transition-colors" title="X">
+                <BespokeTwitterX size={14} />
               </a>
               <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-brand-red transition-colors">
                 <Instagram size={14} />
