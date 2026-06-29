@@ -137,7 +137,7 @@ export default function App() {
       }
 
       // 2. Track active section
-      const sectionIds = ["guardian-registration", "player-detail", "player-statistics", "fees"];
+      const sectionIds = ["guardian-registration", "player-detail", "player-statistics", "fees", "terms-conditions"];
       let currentSection = sectionIds[0];
 
       if (container) {
@@ -1678,7 +1678,7 @@ export default function App() {
               </div>
 
               {/* Injury / Theft Indemnity Agreement Checkbox */}
-              <div className="col-span-1 md:col-span-2 mt-4 bg-slate-50 p-4 rounded-xl border border-gray-100">
+              <div id="terms-conditions" className="col-span-1 md:col-span-2 mt-4 bg-slate-50 p-4 rounded-xl border border-gray-100 scroll-mt-6">
                 <label className="flex items-start text-[11px] text-gray-600 cursor-pointer group">
                   <input 
                     type="checkbox" 
@@ -1807,10 +1807,11 @@ export default function App() {
           <div className="flex items-center">
             <div className="flex space-x-2">
               {[
-                { id: "guardian-registration", step: "01", label: "Guardian Details" },
-                { id: "player-detail", step: "02", label: "Player Details" },
-                { id: "player-statistics", step: "03", label: "Player Stats" },
-                { id: "fees", step: "04", label: "Fees & Payment" }
+                { id: "guardian-registration", step: "01", label: "Parent / Guardian Registration" },
+                { id: "player-detail", step: "02", label: "Player Detail" },
+                { id: "player-statistics", step: "03", label: "Season Statistics" },
+                { id: "fees", step: "04", label: "Fees & Payment" },
+                { id: "terms-conditions", step: "05", label: "Terms and Conditions" }
               ].map((sect) => {
                 const isActive = activeSection === sect.id;
                 
@@ -1827,8 +1828,7 @@ export default function App() {
                     formData.cellphone.replace(/\D/g, "").length >= 10 &&
                     formData.doctorName.trim() &&
                     formData.doctorContact.trim() &&
-                    formData.nextOfKin.trim() &&
-                    formData.agreeTerms
+                    formData.nextOfKin.trim()
                   );
                 } else if (sect.id === "player-detail") {
                   isComplete = !!(
@@ -1837,13 +1837,17 @@ export default function App() {
                   );
                 } else if (sect.id === "player-statistics") {
                   isComplete = !!(
-                    formData.goals.toString().trim() !== "" ||
-                    formData.assists.toString().trim() !== "" ||
+                    formData.goals.toString().trim() !== "" &&
+                    formData.assists.toString().trim() !== "" &&
                     formData.minutesPlayed.toString().trim() !== ""
                   );
                 } else if (sect.id === "fees") {
                   isComplete = !!(
-                    formData.selectedDays.length > 0 &&
+                    formData.selectedDays.length > 0
+                  );
+                } else if (sect.id === "terms-conditions") {
+                  isComplete = !!(
+                    formData.agreeTerms &&
                     formData.agreeIndemnity
                   );
                 }
@@ -1870,10 +1874,11 @@ export default function App() {
             </div>
             <span className="ml-4 text-[9px] uppercase font-bold text-gray-400 tracking-wider transition-all duration-300">
               Step {
-                activeSection === "guardian-registration" ? "01: Guardian Details" :
-                activeSection === "player-detail" ? "02: Player Details" :
-                activeSection === "player-statistics" ? "03: Player Stats" :
-                "04: Fees & Payment"
+                activeSection === "guardian-registration" ? "01: Parent / Guardian Registration" :
+                activeSection === "player-detail" ? "02: Player Detail" :
+                activeSection === "player-statistics" ? "03: Season Statistics" :
+                activeSection === "fees" ? "04: Fees & Payment" :
+                "05: Terms and Conditions"
               }
             </span>
           </div>
