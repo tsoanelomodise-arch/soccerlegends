@@ -84,6 +84,7 @@ export default function App() {
     const element = document.getElementById(id);
     if (element) {
       element.scrollIntoView({ behavior: "smooth", block: "start" });
+      setActiveSection(id);
     }
   };
 
@@ -120,22 +121,76 @@ export default function App() {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [activeSection, setActiveSection] = useState("guardian-registration");
 
   useEffect(() => {
     const container = document.getElementById("form-scroll-container");
-    if (!container) return;
 
     const handleScroll = () => {
-      if (container.scrollTop > 300) {
+      // 1. Update showScrollTop
+      const containerScroll = container ? container.scrollTop : 0;
+      const windowScroll = window.scrollY;
+      if (containerScroll > 300 || windowScroll > 300) {
         setShowScrollTop(true);
       } else {
         setShowScrollTop(false);
       }
+
+      // 2. Track active section
+      const sectionIds = ["guardian-registration", "player-detail", "player-statistics", "fees"];
+      let currentSection = sectionIds[0];
+
+      if (container) {
+        const containerRect = container.getBoundingClientRect();
+        let closestId = sectionIds[0];
+        let closestDist = Infinity;
+
+        for (const id of sectionIds) {
+          const el = document.getElementById(id);
+          if (el) {
+            const elRect = el.getBoundingClientRect();
+            // Calculate distance to the top of the container with a small threshold offset
+            const dist = Math.abs(elRect.top - containerRect.top - 20);
+            if (dist < closestDist) {
+              closestDist = dist;
+              closestId = id;
+            }
+          }
+        }
+        currentSection = closestId;
+      } else {
+        let closestId = sectionIds[0];
+        let closestDist = Infinity;
+        for (const id of sectionIds) {
+          const el = document.getElementById(id);
+          if (el) {
+            const elRect = el.getBoundingClientRect();
+            const dist = Math.abs(elRect.top - 80);
+            if (dist < closestDist) {
+              closestDist = dist;
+              closestId = id;
+            }
+          }
+        }
+        currentSection = closestId;
+      }
+
+      setActiveSection(currentSection);
     };
 
-    container.addEventListener("scroll", handleScroll);
+    if (container) {
+      container.addEventListener("scroll", handleScroll);
+    }
+    window.addEventListener("scroll", handleScroll);
+
+    // Initial run to capture state on load
+    handleScroll();
+
     return () => {
-      container.removeEventListener("scroll", handleScroll);
+      if (container) {
+        container.removeEventListener("scroll", handleScroll);
+      }
+      window.removeEventListener("scroll", handleScroll);
     };
   }, []);
 
@@ -144,6 +199,7 @@ export default function App() {
     if (container) {
       container.scrollTo({ top: 0, behavior: "smooth" });
     }
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const calculateAge = (dob: string) => {
@@ -672,7 +728,7 @@ export default function App() {
                       <span>{item.label}</span>
                       <ChevronDown size={12} className="opacity-50 group-hover:opacity-100 transition-transform duration-200 group-hover:rotate-180" />
                     </button>
-                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 bg-white border border-gray-100 rounded-xl shadow-xl py-2 hidden group-hover/dropdown:block z-50 animate-in fade-in slide-in-from-top-2 duration-200">
+                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-1 w-48 bg-white border border-gray-100 rounded-xl shadow-xl py-2 hidden group-hover/dropdown:block z-50 animate-in fade-in slide-in-from-top-2 duration-200 before:content-[''] before:absolute before:-top-3 before:left-0 before:right-0 before:h-3">
                       {item.subItems.map((sub) => {
                         const SubIcon = sub.icon;
                         return (
@@ -1750,11 +1806,37 @@ export default function App() {
         <footer className="h-12 bg-white border-t border-gray-100 px-8 flex items-center justify-between shrink-0">
           <div className="flex items-center">
             <div className="flex space-x-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-brand-red"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
-              <div className="w-1.5 h-1.5 rounded-full bg-gray-200"></div>
+              {[
+                { id: "guardian-registration", step: "01", label: "Guardian Details" },
+                { id: "player-detail", step: "02", label: "Player Details" },
+                { id: "player-statistics", step: "03", label: "Player Stats" },
+                { id: "fees", step: "04", label: "Fees & Payment" }
+              ].map((sect) => {
+                const isActive = activeSection === sect.id;
+                return (
+                  <button
+                    key={sect.id}
+                    type="button"
+                    onClick={() => scrollToSection(sect.id)}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 focus:outline-none cursor-pointer ${
+                      isActive 
+                        ? "bg-brand-red scale-125 ring-2 ring-brand-red/20 ring-offset-1" 
+                        : "bg-gray-200 hover:bg-brand-red/50"
+                    }`}
+                    title={`Go to ${sect.label}`}
+                    aria-label={`Scroll to ${sect.label}`}
+                  />
+                );
+              })}
             </div>
-            <span className="ml-4 text-[9px] uppercase font-bold text-gray-400 tracking-wider">Step 01: Guardian Details</span>
+            <span className="ml-4 text-[9px] uppercase font-bold text-gray-400 tracking-wider transition-all duration-300">
+              Step {
+                activeSection === "guardian-registration" ? "01: Guardian Details" :
+                activeSection === "player-detail" ? "02: Player Details" :
+                activeSection === "player-statistics" ? "03: Player Stats" :
+                "04: Fees & Payment"
+              }
+            </span>
           </div>
           
           <div className="flex items-center space-x-6">
@@ -1787,7 +1869,7 @@ export default function App() {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.8 }}
               onClick={scrollToTop}
-              className="absolute bottom-16 right-6 p-3 bg-brand-red text-white rounded-full shadow-lg hover:brightness-110 transition-all duration-200 z-50 cursor-pointer flex items-center justify-center border border-brand-red/30 focus:outline-none"
+              className="fixed bottom-6 right-6 md:bottom-8 md:right-8 p-3 bg-brand-red text-white rounded-full shadow-2xl hover:bg-brand-red/90 hover:scale-110 active:scale-95 transition-all duration-200 z-[9999] cursor-pointer flex items-center justify-center border border-brand-red/20 shadow-brand-red/25 focus:outline-none"
               title="Back to Top"
               aria-label="Scroll to top of registration form"
             >
