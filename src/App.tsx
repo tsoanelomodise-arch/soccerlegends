@@ -1999,7 +1999,6 @@ export default function App() {
           
           <div className="flex items-center space-x-6">
             <div className="hidden md:flex items-center space-x-6 text-[9px] uppercase font-bold text-gray-400 tracking-wider">
-              <a href="mailto:info@legendsacademy.co.za" className="hover:text-brand-red transition-colors">Contact Us</a>
               <button
                 type="button"
                 onClick={handleLoadTestData}
@@ -2008,6 +2007,7 @@ export default function App() {
               >
                 Load Test Data
               </button>
+              <a href="mailto:info@legendsacademy.co.za" className="hover:text-brand-red transition-colors">Contact Us</a>
               <a href="#privacy" className="hover:text-brand-red transition-colors">Privacy Policy</a>
               <a href="#terms" className="hover:text-brand-red transition-colors">Terms of Service</a>
             </div>
