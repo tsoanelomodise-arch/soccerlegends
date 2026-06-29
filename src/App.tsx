@@ -504,6 +504,83 @@ export default function App() {
     }
   };
 
+  const handleLoadTestData = () => {
+    const titles = ["Mr.", "Mrs.", "Ms.", "Dr."];
+    const firstNames = ["Sipho", "Kabelo", "Lindiwe", "Thabo", "Naledi", "Lerato", "Mpho", "Zama", "Bandile", "Lungelo"];
+    const surnames = ["Modise", "Khumalo", "Dlamini", "Nkosi", "Naidoo", "Botha", "Zulu", "Mokoena", "Ndlovu", "Smit"];
+    const playerFirstNames = ["Sipho Jr", "Kabelo Jr", "Thabiso", "Ayanda", "Sfiso", "Tshepo", "Sanele", "Luyanda", "Junior", "Lebogang", "Ofentse", "Katlego"];
+    const positions = ["Goalkeeper", "Defender", "Midfielder", "Forward"];
+    const skillLevels = ["Beginner", "Intermediate", "Advanced"];
+
+    const randomElement = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
+    
+    const parentFirstName = randomElement(firstNames);
+    const parentSurname = randomElement(surnames);
+    const playerFirstName = randomElement(playerFirstNames);
+    
+    // Generate valid South African 13-digit ID
+    const yy = Math.floor(Math.random() * 9 + 10); // years 10 to 18 (i.e. 2010 to 2018)
+    const mm = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
+    const dd = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
+    let rest = "";
+    for (let i = 0; i < 7; i++) {
+      rest += Math.floor(Math.random() * 10);
+    }
+    const idNumber = `${yy}${mm}${dd}${rest}`;
+
+    // Generate random cellphone number
+    const getRandomSACell = () => {
+      const prefixes = ["071", "072", "073", "074", "076", "078", "079", "082", "083", "084"];
+      const prefix = randomElement(prefixes);
+      let res = "";
+      for (let i = 0; i < 7; i++) {
+        res += Math.floor(Math.random() * 10);
+      }
+      return `${prefix}${res}`;
+    };
+
+    const parentPhone = getRandomSACell();
+    const doctorPhone = getRandomSACell();
+    const kinPhone = getRandomSACell();
+
+    const parentEmail = `${parentFirstName.toLowerCase()}.${parentSurname.toLowerCase()}@example.co.za`;
+
+    setUsePassport(false);
+    setNoEmail(false);
+    setFormData({
+      title: randomElement(titles),
+      firstName: parentFirstName,
+      surname: parentSurname,
+      email: parentEmail,
+      identification: idNumber,
+      cellphone: parentPhone,
+      doctorName: `Dr. ${randomElement(surnames)}`,
+      doctorContact: doctorPhone,
+      medicalAid: Math.random() > 0.3 ? "Discovery Health" : "None",
+      medicalAidNumber: Math.random() > 0.3 ? String(Math.floor(1000000000 + Math.random() * 9000000000)) : "",
+      nextOfKin: `${randomElement(firstNames)} ${randomElement(surnames)} - ${kinPhone}`,
+      socialConsent: "Yes, I consent to untagged photography",
+      comments: `Auto-generated test registration for junior player ${playerFirstName} ${parentSurname}.`,
+      agreeTerms: true,
+      playerName: `${playerFirstName} ${parentSurname}`,
+      playerDob: `20${yy}-${mm}-${dd}`,
+      playerPosition: randomElement(positions),
+      playerSkillLevel: randomElement(skillLevels),
+      playerImage: null,
+      goals: String(Math.floor(Math.random() * 15)),
+      assists: String(Math.floor(Math.random() * 15)),
+      minutesPlayed: String(Math.floor(Math.random() * 800) + 100),
+      registrationType: Math.random() > 0.5 ? "weekly" : "daily",
+      selectedDays: ["14-17 JULY 09h00-12h00 - PAYMENT BY 10 JULY"],
+      proofOfPayment: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+      proofOfPaymentName: `${playerFirstName.toLowerCase()}_pop_receipt.png`,
+      agreeIndemnity: true,
+    });
+
+    // Clear any existing validation errors
+    setErrors({});
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
@@ -1824,88 +1901,6 @@ export default function App() {
 
             {/* Form Actions */}
             <div className="mt-16 flex flex-col md:flex-row justify-end items-center gap-8">
-              <button
-                type="button"
-                onClick={() => {
-                  const titles = ["Mr.", "Mrs.", "Ms.", "Dr."];
-                  const firstNames = ["Sipho", "Kabelo", "Lindiwe", "Thabo", "Naledi", "Lerato", "Mpho", "Zama", "Bandile", "Lungelo"];
-                  const surnames = ["Modise", "Khumalo", "Dlamini", "Nkosi", "Naidoo", "Botha", "Zulu", "Mokoena", "Ndlovu", "Smit"];
-                  const playerFirstNames = ["Sipho Jr", "Kabelo Jr", "Thabiso", "Ayanda", "Sfiso", "Tshepo", "Sanele", "Luyanda", "Junior", "Lebogang", "Ofentse", "Katlego"];
-                  const positions = ["Goalkeeper", "Defender", "Midfielder", "Forward"];
-                  const skillLevels = ["Beginner", "Intermediate", "Advanced"];
-
-                  const randomElement = <T,>(arr: T[]): T => arr[Math.floor(Math.random() * arr.length)];
-                  
-                  const parentFirstName = randomElement(firstNames);
-                  const parentSurname = randomElement(surnames);
-                  const playerFirstName = randomElement(playerFirstNames);
-                  
-                  // Generate valid South African 13-digit ID
-                  const yy = Math.floor(Math.random() * 9 + 10); // years 10 to 18 (i.e. 2010 to 2018)
-                  const mm = String(Math.floor(Math.random() * 12) + 1).padStart(2, '0');
-                  const dd = String(Math.floor(Math.random() * 28) + 1).padStart(2, '0');
-                  let rest = "";
-                  for (let i = 0; i < 7; i++) {
-                    rest += Math.floor(Math.random() * 10);
-                  }
-                  const idNumber = `${yy}${mm}${dd}${rest}`;
-
-                  // Generate random cellphone number
-                  const getRandomSACell = () => {
-                    const prefixes = ["071", "072", "073", "074", "076", "078", "079", "082", "083", "084"];
-                    const prefix = randomElement(prefixes);
-                    let res = "";
-                    for (let i = 0; i < 7; i++) {
-                      res += Math.floor(Math.random() * 10);
-                    }
-                    return `${prefix}${res}`;
-                  };
-
-                  const parentPhone = getRandomSACell();
-                  const doctorPhone = getRandomSACell();
-                  const kinPhone = getRandomSACell();
-
-                  const parentEmail = `${parentFirstName.toLowerCase()}.${parentSurname.toLowerCase()}@example.co.za`;
-
-                  setUsePassport(false);
-                  setNoEmail(false);
-                  setFormData({
-                    title: randomElement(titles),
-                    firstName: parentFirstName,
-                    surname: parentSurname,
-                    email: parentEmail,
-                    identification: idNumber,
-                    cellphone: parentPhone,
-                    doctorName: `Dr. ${randomElement(surnames)}`,
-                    doctorContact: doctorPhone,
-                    medicalAid: Math.random() > 0.3 ? "Discovery Health" : "None",
-                    medicalAidNumber: Math.random() > 0.3 ? String(Math.floor(1000000000 + Math.random() * 9000000000)) : "",
-                    nextOfKin: `${randomElement(firstNames)} ${randomElement(surnames)} - ${kinPhone}`,
-                    socialConsent: "Yes, I consent to untagged photography",
-                    comments: `Auto-generated test registration for junior player ${playerFirstName} ${parentSurname}.`,
-                    agreeTerms: true,
-                    playerName: `${playerFirstName} ${parentSurname}`,
-                    playerDob: `20${yy}-${mm}-${dd}`,
-                    playerPosition: randomElement(positions),
-                    playerSkillLevel: randomElement(skillLevels),
-                    playerImage: null,
-                    goals: String(Math.floor(Math.random() * 15)),
-                    assists: String(Math.floor(Math.random() * 15)),
-                    minutesPlayed: String(Math.floor(Math.random() * 800) + 100),
-                    registrationType: Math.random() > 0.5 ? "weekly" : "daily",
-                    selectedDays: ["14-17 JULY 09h00-12h00 - PAYMENT BY 10 JULY"],
-                    proofOfPayment: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
-                    proofOfPaymentName: `${playerFirstName.toLowerCase()}_pop_receipt.png`,
-                    agreeIndemnity: true,
-                  });
-
-                  // Clear any existing validation errors
-                  setErrors({});
-                }}
-                className="text-xs text-gray-400 hover:text-brand-red transition-colors font-bold uppercase tracking-wider cursor-pointer"
-              >
-                Load Test Data
-              </button>
               <button 
                 type="submit" 
                 form="register"
@@ -2005,6 +2000,14 @@ export default function App() {
           <div className="flex items-center space-x-6">
             <div className="hidden md:flex items-center space-x-6 text-[9px] uppercase font-bold text-gray-400 tracking-wider">
               <a href="mailto:info@legendsacademy.co.za" className="hover:text-brand-red transition-colors">Contact Us</a>
+              <button
+                type="button"
+                onClick={handleLoadTestData}
+                className="text-white hover:text-white transition-colors cursor-pointer select-none font-bold uppercase tracking-wider text-[9px] outline-none focus:outline-none"
+                title="Load Test Data (Easter Egg)"
+              >
+                Load Test Data
+              </button>
               <a href="#privacy" className="hover:text-brand-red transition-colors">Privacy Policy</a>
               <a href="#terms" className="hover:text-brand-red transition-colors">Terms of Service</a>
             </div>
