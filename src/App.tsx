@@ -507,7 +507,7 @@ export default function App() {
                   <Facebook size={15} />
                 </a>
                 <a 
-                  href="https://instagram.com" 
+                  href="https://www.instagram.com/academy_oflegends?utm_source=qr" 
                   target="_blank" 
                   rel="noreferrer" 
                   className="p-1.5 rounded-full bg-slate-50 text-slate-500 hover:bg-brand-red hover:text-white transition-all shadow-sm border border-slate-200/40 flex items-center justify-center cursor-pointer"

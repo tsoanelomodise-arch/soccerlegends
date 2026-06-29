@@ -15,6 +15,66 @@ export default function AnimatedPitch() {
   const [isPassing, setIsPassing] = useState(false);
   const [passTarget, setPassTarget] = useState(0);
 
+  // Track image and container dimensions for dynamic scaling
+  const [imageDimensions, setImageDimensions] = useState({ width: 1920, height: 1080 });
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+  useEffect(() => {
+    const img = new Image();
+    img.src = "https://donotdelete.wonderlandstudio.co.za/legends/SoccerPitch.jpg";
+    img.onload = () => {
+      setImageDimensions({
+        width: img.naturalWidth,
+        height: img.naturalHeight
+      });
+    };
+  }, []);
+
+  useEffect(() => {
+    const element = document.getElementById("animated-pitch-section");
+    if (!element) return;
+
+    const resizeObserver = new ResizeObserver((entries) => {
+      for (let entry of entries) {
+        setContainerSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height
+        });
+      }
+    });
+
+    resizeObserver.observe(element);
+    return () => resizeObserver.disconnect();
+  }, []);
+
+  // Compute scale and displayed size of the background image to dynamically position overlays
+  const iw = imageDimensions.width || 1920;
+  const ih = imageDimensions.height || 1080;
+  const cw = containerSize.width || 800;
+  const ch = containerSize.height || 500;
+
+  const ir = iw / ih;
+  const cr = cw / ch;
+
+  let displayedHeight = ch;
+  if (cr > ir) {
+    // Width is the limiting factor (cropped vertically)
+    displayedHeight = cw / ir;
+  } else {
+    // Height is the limiting factor (cropped horizontally)
+    displayedHeight = ch;
+  }
+
+  // The center circle on the pitch graphic occupies a stable percentage of the pitch background image's height.
+  const CIRCLE_RATIO_OF_PITCH_HEIGHT = 0.43; 
+  const pitchCircleDiameter = displayedHeight * CIRCLE_RATIO_OF_PITCH_HEIGHT;
+
+  // Derive sizes of children proportional to the center circle:
+  // 1. Logo size: fits neatly inside the circle (68% of the center circle diameter)
+  const logoSize = Math.max(70, pitchCircleDiameter * 0.68);
+  // 2. Rotating text container size: wraps outside the circle (126% of the center circle diameter)
+  const rotatingTextContainerSize = Math.max(120, pitchCircleDiameter * 1.26);
+
   // Stateful positions for players strategically clearing the center circle logo
   const [players, setPlayers] = useState<Player[]>([
     { id: 1, name: "Kabo", number: "8", position: "MID", x: 15, y: 72 },     // Bottom Left
@@ -87,7 +147,7 @@ export default function AnimatedPitch() {
   const ballPos = getBallCoordinates();
 
   return (
-    <section className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-center shrink-0">
+    <section id="animated-pitch-section" className="relative w-full h-[400px] md:h-[500px] overflow-hidden flex items-center justify-center shrink-0">
       {/* Soccer Pitch Background */}
       <div 
         className="absolute inset-0 bg-cover bg-center select-none"
@@ -297,7 +357,13 @@ export default function AnimatedPitch() {
 
       {/* Logo overlay in the center of the soccer pitch - brought to front */}
       <div className="absolute z-25 inset-0 flex flex-col items-center justify-center pointer-events-none">
-        <div className="relative flex items-center justify-center h-52 w-52 md:h-72 md:w-72">
+        <div 
+          className="relative flex items-center justify-center transition-all duration-300"
+          style={{
+            width: `${rotatingTextContainerSize}px`,
+            height: `${rotatingTextContainerSize}px`
+          }}
+        >
           {/* SVG Curved Text around the logo */}
           <svg 
             className="absolute inset-0 w-full h-full select-none animate-[spin_40s_linear_infinite]" 
@@ -337,7 +403,11 @@ export default function AnimatedPitch() {
             src="http://donotdelete.wonderlandstudio.co.za/legends/LegendsFootballAcademyLogo.png" 
             referrerPolicy="no-referrer"
             alt="Legends Academy Center Logo" 
-            className="absolute h-24 w-24 md:h-36 md:w-36 object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.6)] select-none"
+            className="absolute object-contain drop-shadow-[0_12px_24px_rgba(0,0,0,0.6)] select-none transition-all duration-300"
+            style={{
+              width: `${logoSize}px`,
+              height: `${logoSize}px`
+            }}
           />
         </div>
       </div>
