@@ -1813,17 +1813,56 @@ export default function App() {
                 { id: "fees", step: "04", label: "Fees & Payment" }
               ].map((sect) => {
                 const isActive = activeSection === sect.id;
+                
+                // Determine if this section is complete
+                let isComplete = false;
+                if (sect.id === "guardian-registration") {
+                  isComplete = !!(
+                    formData.firstName.trim() &&
+                    formData.surname.trim() &&
+                    (noEmail || (formData.email.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))) &&
+                    formData.identification.trim() &&
+                    (usePassport || /^\d{13}$/.test(formData.identification.replace(/\s/g, ""))) &&
+                    formData.cellphone.trim() &&
+                    formData.cellphone.replace(/\D/g, "").length >= 10 &&
+                    formData.doctorName.trim() &&
+                    formData.doctorContact.trim() &&
+                    formData.nextOfKin.trim() &&
+                    formData.agreeTerms
+                  );
+                } else if (sect.id === "player-detail") {
+                  isComplete = !!(
+                    formData.playerName.trim() &&
+                    formData.playerDob
+                  );
+                } else if (sect.id === "player-statistics") {
+                  isComplete = !!(
+                    formData.goals.toString().trim() !== "" ||
+                    formData.assists.toString().trim() !== "" ||
+                    formData.minutesPlayed.toString().trim() !== ""
+                  );
+                } else if (sect.id === "fees") {
+                  isComplete = !!(
+                    formData.selectedDays.length > 0 &&
+                    formData.agreeIndemnity
+                  );
+                }
+
                 return (
                   <button
                     key={sect.id}
                     type="button"
                     onClick={() => scrollToSection(sect.id)}
-                    className={`w-2 h-2 rounded-full transition-all duration-300 focus:outline-none cursor-pointer ${
+                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 focus:outline-none cursor-pointer ${
+                      isComplete 
+                        ? "bg-brand-red" 
+                        : "bg-gray-200 hover:bg-gray-300"
+                    } ${
                       isActive 
-                        ? "bg-brand-red scale-125 ring-2 ring-brand-red/20 ring-offset-1" 
-                        : "bg-gray-200 hover:bg-brand-red/50"
+                        ? "scale-125 ring-2 ring-brand-red/30 ring-offset-1" 
+                        : "hover:scale-110"
                     }`}
-                    title={`Go to ${sect.label}`}
+                    title={`Go to ${sect.label} (${isComplete ? "Complete" : "Incomplete"})`}
                     aria-label={`Scroll to ${sect.label}`}
                   />
                 );
