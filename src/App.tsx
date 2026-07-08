@@ -571,7 +571,7 @@ export default function App() {
       assists: String(Math.floor(Math.random() * 15)),
       minutesPlayed: String(Math.floor(Math.random() * 800) + 100),
       registrationType: Math.random() > 0.5 ? "weekly" : "daily",
-      selectedDays: ["14-17 JULY 09h00-12h00 - PAYMENT BY 10 JULY"],
+      selectedDays: ["14-17 JULY 09h00-12h00 - PAYMENT BY 13 JULY"],
       proofOfPayment: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
       proofOfPaymentName: `${playerFirstName.toLowerCase()}_pop_receipt.png`,
       agreeIndemnity: true,
@@ -1769,8 +1769,8 @@ export default function App() {
                     { 
                       id: "Session 1", 
                       label: "14-17 JULY 09h00-12h00", 
-                      deadline: "PAYMENT BY 10 JULY", 
-                      value: "14-17 JULY 09h00-12h00 - PAYMENT BY 10 JULY" 
+                      deadline: "PAYMENT BY 13 JULY", 
+                      value: "14-17 JULY 09h00-12h00 - PAYMENT BY 13 JULY" 
                     },
                     { 
                       id: "Session 2", 
