@@ -1,4 +1,5 @@
 import { motion, AnimatePresence } from "motion/react";
+import { jsPDF } from "jspdf";
 import { 
   Facebook,
   Instagram,
@@ -6,7 +7,8 @@ import {
   Calendar,
   Menu,
   X,
-  ChevronDown
+  ChevronDown,
+  Download
 } from "lucide-react";
 import { 
   BespokeUsers,
@@ -123,6 +125,9 @@ export default function App() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [activeSection, setActiveSection] = useState("guardian-registration");
   const [showErrorPopup, setShowErrorPopup] = useState(false);
+  const [registeredData, setRegisteredData] = useState<FormData | null>(null);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isEmailNotifySuccess, setIsEmailNotifySuccess] = useState(false);
 
   useEffect(() => {
     const container = document.getElementById("form-scroll-container");
@@ -581,6 +586,141 @@ export default function App() {
     setErrors({});
   };
 
+  const handleDownloadPDF = (data: FormData) => {
+    const doc = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    
+    // Header block background (Dark Slate)
+    doc.setFillColor(15, 23, 42); // #0f172a
+    doc.rect(0, 0, 210, 38, "F");
+    
+    // Logo Text
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(16);
+    doc.text("LEGENDS SOCCER ACADEMY", 15, 15);
+    
+    // Subtitle
+    doc.setTextColor(148, 163, 184);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.text("OFFICIAL CAMP REGISTRATION RECEIPT", 15, 21);
+    
+    // Submission Timestamp
+    doc.setTextColor(255, 255, 255);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(7.5);
+    doc.text(`DATE SUBMITTED: ${new Date().toLocaleDateString()}`, 145, 15);
+    
+    // Status Badge background (Emerald Green)
+    doc.setFillColor(16, 185, 129); // emerald-500
+    doc.rect(145, 19, 50, 7, "F");
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(8);
+    doc.setFont("helvetica", "bold");
+    doc.text("REGISTRATION CONFIRMED", 147.5, 23.5);
+    
+    let y = 48;
+    
+    const drawSectionTitle = (title: string) => {
+      doc.setTextColor(218, 37, 29); // #da251d (brand red)
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10);
+      doc.text(title, 15, y);
+      doc.setDrawColor(226, 232, 240); // slate-200
+      doc.setLineWidth(0.4);
+      doc.line(15, y + 2, 195, y + 2);
+      y += 8;
+    };
+    
+    const drawField = (label: string, value: string, x: number) => {
+      doc.setTextColor(100, 116, 139); // slate-500
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(7.5);
+      doc.text(label.toUpperCase(), x, y);
+      
+      doc.setTextColor(15, 23, 42); // slate-900
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      
+      const maxWidth = x === 15 && (label.toUpperCase() === "COMMENTS" || label.toUpperCase() === "SELECTED SESSIONS" || label.toUpperCase() === "SPECIAL COMMENTS / NOTES") ? 180 : 85;
+      const wrappedValue = doc.splitTextToSize(value || "N/A", maxWidth);
+      doc.text(wrappedValue, x, y + 4);
+      return (wrappedValue.length * 4) + 6;
+    };
+
+    // --- Section 1: Player Information ---
+    drawSectionTitle("1. PLAYER INFORMATION");
+    const h1 = drawField("Player Name", data.playerName, 15);
+    const h2 = drawField("Date of Birth", data.playerDob, 105);
+    y += Math.max(h1, h2);
+    
+    const h3 = drawField("Preferred Position", data.playerPosition, 15);
+    const h4 = drawField("Skill Level", data.playerSkillLevel, 105);
+    y += Math.max(h3, h4);
+    
+    const h5 = drawField("Goals & Assists Trackers", `${data.goals || "0"} goals / ${data.assists || "0"} assists`, 15);
+    const h6 = drawField("Minutes Played", `${data.minutesPlayed || "0"} minutes`, 105);
+    y += Math.max(h5, h6) + 4;
+    
+    // --- Section 2: Parent / Guardian Information ---
+    drawSectionTitle("2. PARENT / GUARDIAN INFORMATION");
+    const g1 = drawField("Guardian Name", `${data.title} ${data.firstName} ${data.surname}`, 15);
+    const g2 = drawField("Email Address", data.email || "N/A (Opted Out of Emails)", 105);
+    y += Math.max(g1, g2);
+    
+    const g3 = drawField("ID/Passport Number", data.identification, 15);
+    const g4 = drawField("Cellphone Number", data.cellphone, 105);
+    y += Math.max(g3, g4);
+    
+    const g5 = drawField("Emergency Contact (Next of Kin)", data.nextOfKin, 15);
+    const g6 = drawField("Photography & Social Consent", data.socialConsent, 105);
+    y += Math.max(g5, g6) + 4;
+
+    // --- Section 3: Medical Details ---
+    drawSectionTitle("3. MEDICAL DETAILS");
+    const m1 = drawField("Doctor Name", data.doctorName, 15);
+    const m2 = drawField("Doctor Contact", data.doctorContact, 105);
+    y += Math.max(m1, m2);
+    
+    const m3 = drawField("Medical Aid Provider", data.medicalAid || "None / Cash Customer", 15);
+    const m4 = drawField("Medical Aid Number", data.medicalAidNumber || "N/A", 105);
+    y += Math.max(m3, m4) + 4;
+
+    // --- Section 4: Camp & Sessions ---
+    drawSectionTitle("4. CAMP SESSION DETAILS");
+    const s1 = drawField("Registration Type", data.registrationType === "weekly" ? "Weekly Package (R900)" : "Daily Package (R250/day)", 15);
+    const s2 = drawField("Proof of Payment Uploaded", data.proofOfPaymentName || "No file uploaded", 105);
+    y += Math.max(s1, s2);
+    
+    const s3 = drawField("Selected Sessions", (data.selectedDays || []).join(", "), 15);
+    y += s3;
+    
+    if (data.comments) {
+      const s4 = drawField("Special Comments / Notes", data.comments, 15);
+      y += s4;
+    }
+    y += 2;
+
+    // --- Section 5: Legal Declarations ---
+    drawSectionTitle("5. LEGAL DECLARATIONS & WAIVERS");
+    const l1 = drawField("Terms & Conditions Agreement", "Accepted & Agreed (Yes)", 15);
+    const l2 = drawField("Injury & Theft Indemnity Waiver", "Accepted & Agreed (Yes)", 105);
+    y += Math.max(l1, l2) + 8;
+    
+    // Bottom Footer accent lines
+    doc.setDrawColor(226, 232, 240);
+    doc.setLineWidth(0.4);
+    doc.line(15, 276, 195, 276);
+    
+    doc.setTextColor(148, 163, 184);
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(7.5);
+    doc.text("© Legends Soccer Academy. All Rights Reserved. Thank you for registering!", 15, 282);
+    doc.text("This PDF document serves as official proof of online registration submission.", 15, 286);
+    
+    doc.save(`Legends_Academy_Registration_${data.playerName.replace(/\s+/g, '_')}.pdf`);
+  };
+
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     
@@ -812,11 +952,10 @@ export default function App() {
         }
       }
 
-      if (isRegistrationSuccessful) {
-        alert("Registration successful! Your details have been submitted and our team has been notified via email.");
-      } else {
-        alert("Registration submitted successfully!\n\nNote: The automated email confirmation is being processed manually. No action is required from you.");
-      }
+      // Save the registered data for download and summary, then open the beautiful success modal
+      setRegisteredData({ ...formData });
+      setIsEmailNotifySuccess(isRegistrationSuccessful);
+      setShowSuccessModal(true);
 
       // Reset form
       setFormData({
@@ -2190,6 +2329,120 @@ export default function App() {
                       </>
                     );
                   })()}
+                </div>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
+
+        {/* Beautiful Registration Success Modal */}
+        <AnimatePresence>
+          {showSuccessModal && registeredData && (
+            <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[10000] flex items-center justify-center p-4">
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 15 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 15 }}
+                transition={{ type: "spring", duration: 0.5 }}
+                className="bg-white rounded-2xl shadow-3xl border border-gray-100 max-w-lg w-full overflow-hidden flex flex-col max-h-[85vh]"
+              >
+                {/* Header */}
+                <div className="p-6 border-b border-gray-100 bg-emerald-50 flex items-center justify-between shrink-0">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-emerald-500/10 rounded-xl text-emerald-600">
+                      <BespokeCheck size={20} />
+                    </div>
+                    <div>
+                      <h3 className="font-display font-black text-slate-900 text-base leading-tight">Registration Successful!</h3>
+                      <p className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider mt-0.5">Legends Soccer Academy</p>
+                    </div>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setShowSuccessModal(false)}
+                    className="p-1.5 rounded-lg text-gray-400 hover:text-slate-600 hover:bg-gray-100 transition-all cursor-pointer focus:outline-none"
+                    aria-label="Close modal"
+                  >
+                    <X size={18} />
+                  </button>
+                </div>
+
+                {/* Body Content */}
+                <div className="p-6 overflow-y-auto space-y-6 flex-1">
+                  {/* Downloads & Action Section */}
+                  <div className="space-y-3 bg-emerald-50/40 p-4 rounded-xl border border-emerald-100/40">
+                    <p className="text-[10px] text-center text-emerald-800 font-black uppercase tracking-wider">
+                      Required Action: Download Registration Receipt
+                    </p>
+                    
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleDownloadPDF(registeredData)}
+                        className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl border border-slate-200 hover:border-emerald-500/50 hover:bg-emerald-50/20 text-slate-700 hover:text-emerald-700 transition-all font-bold text-[12px] uppercase tracking-wider cursor-pointer group shadow-sm bg-white"
+                      >
+                        <Download size={14} className="text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                        <span>Download Official Registration (PDF)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="text-center pt-2">
+                    <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3 shadow-inner">
+                      <BespokeCheck size={32} />
+                    </div>
+                    <h4 className="text-slate-900 font-extrabold text-lg tracking-tight">Welcome to the Academy!</h4>
+                    <p className="text-xs text-gray-500 mt-1 max-w-[360px] mx-auto leading-relaxed">
+                      {isEmailNotifySuccess 
+                        ? "Your registration has been successfully processed. The academy team has been notified via email!" 
+                        : "Registration details saved successfully! The automated email notifications are being queued manually. Your spot is secure!"
+                      }
+                    </p>
+                  </div>
+
+                  {/* Summary Card */}
+                  <div className="bg-slate-50 rounded-2xl p-5 border border-slate-100 space-y-3">
+                    <h5 className="text-[10px] font-black uppercase tracking-wider text-slate-400 border-b border-slate-200/60 pb-1.5">Registered Player Summary</h5>
+                    
+                    <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-xs">
+                      <div>
+                        <span className="block text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Player Name</span>
+                        <span className="font-bold text-slate-800">{registeredData.playerName}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Date of Birth</span>
+                        <span className="font-bold text-slate-800">{registeredData.playerDob}</span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Position & Skill</span>
+                        <span className="font-bold text-slate-800">{registeredData.playerPosition} ({registeredData.playerSkillLevel})</span>
+                      </div>
+                      <div>
+                        <span className="block text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Guardian Contact</span>
+                        <span className="font-bold text-slate-800">{registeredData.cellphone}</span>
+                      </div>
+                      <div className="col-span-2">
+                        <span className="block text-[10px] text-gray-400 font-semibold uppercase tracking-wider">Selected Sessions</span>
+                        <span className="font-bold text-slate-800 block leading-tight mt-0.5">
+                          {registeredData.selectedDays.join(", ")}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Footer */}
+                <div className="p-6 border-t border-gray-100 shrink-0 flex items-center justify-center bg-slate-50 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setShowSuccessModal(false);
+                      setRegisteredData(null);
+                    }}
+                    className="btn-artistic-primary py-3 px-8 text-xs font-black uppercase tracking-widest cursor-pointer w-full"
+                  >
+                    Register Another Player
+                  </button>
                 </div>
               </motion.div>
             </div>
