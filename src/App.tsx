@@ -2379,9 +2379,9 @@ export default function App() {
                       <button
                         type="button"
                         onClick={() => handleDownloadPDF(registeredData)}
-                        className="flex items-center justify-center gap-2 w-full px-5 py-3 rounded-xl border border-slate-200 hover:border-emerald-500/50 hover:bg-emerald-50/20 text-slate-700 hover:text-emerald-700 transition-all font-bold text-[12px] uppercase tracking-wider cursor-pointer group shadow-sm bg-white"
+                        className="btn-artistic-primary flex items-center justify-center gap-2.5 w-full py-4 text-[11px] font-black uppercase tracking-widest cursor-pointer shadow-xl shadow-brand-red/20 active:scale-95 transition-all text-white"
                       >
-                        <Download size={14} className="text-slate-400 group-hover:text-emerald-600 transition-colors" />
+                        <Download size={15} className="text-white" />
                         <span>Download Official Registration (PDF)</span>
                       </button>
                     </div>
@@ -2439,7 +2439,7 @@ export default function App() {
                       setShowSuccessModal(false);
                       setRegisteredData(null);
                     }}
-                    className="btn-artistic-primary py-3 px-8 text-xs font-black uppercase tracking-widest cursor-pointer w-full"
+                    className="btn-artistic-outline py-3.5 px-8 text-[11px] font-black uppercase tracking-widest cursor-pointer w-full text-center bg-white border border-[#0f172a] text-[#0f172a] hover:bg-[#0f172a] hover:text-white transition-all duration-200"
                   >
                     Register Another Player
                   </button>
