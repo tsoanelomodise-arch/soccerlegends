@@ -8,8 +8,10 @@ import {
   Menu,
   X,
   ChevronDown,
-  Download
+  Download,
+  QrCode
 } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 import { 
   BespokeUsers,
   BespokeUser,
@@ -2052,115 +2054,160 @@ export default function App() {
           </div>
         </div>
         
-        {/* Breadcrumb / Progress Status Bar with Social Links */}
-        <footer className="h-12 bg-white border-t border-gray-100 px-8 flex items-center justify-between shrink-0">
-          <div className="flex items-center">
-            <div className="flex space-x-2">
-              {[
-                { id: "guardian-registration", step: "01", label: "Parent / Guardian Registration" },
-                { id: "player-detail", step: "02", label: "Player Detail" },
-                { id: "player-statistics", step: "03", label: "Season Statistics" },
-                { id: "fees", step: "04", label: "Fees & Payment" },
-                { id: "terms-conditions", step: "05", label: "Terms and Conditions" }
-              ].map((sect) => {
-                const isActive = activeSection === sect.id;
-                
-                // Determine if this section is complete
-                let isComplete = false;
-                if (sect.id === "guardian-registration") {
-                  isComplete = !!(
-                    formData.firstName.trim() &&
-                    formData.surname.trim() &&
-                    (noEmail || (formData.email.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))) &&
-                    formData.identification.trim() &&
-                    (usePassport || /^\d{13}$/.test(formData.identification.replace(/\s/g, ""))) &&
-                    formData.cellphone.trim() &&
-                    formData.cellphone.replace(/\D/g, "").length >= 10 &&
-                    formData.doctorName.trim() &&
-                    formData.doctorContact.trim() &&
-                    formData.nextOfKin.trim()
-                  );
-                } else if (sect.id === "player-detail") {
-                  isComplete = !!(
-                    formData.playerName.trim() &&
-                    formData.playerDob
-                  );
-                } else if (sect.id === "player-statistics") {
-                  // Season statistics are complete if they are valid numbers (including 0) or left empty (implicit 0)
-                  const g = formData.goals.toString().trim();
-                  const a = formData.assists.toString().trim();
-                  const m = formData.minutesPlayed.toString().trim();
-                  const isValidG = g === "" || !isNaN(Number(g));
-                  const isValidA = a === "" || !isNaN(Number(a));
-                  const isValidM = m === "" || !isNaN(Number(m));
-                  isComplete = isValidG && isValidA && isValidM;
-                } else if (sect.id === "fees") {
-                  isComplete = !!(
-                    formData.selectedDays.length > 0
-                  );
-                } else if (sect.id === "terms-conditions") {
-                  isComplete = !!(
-                    formData.agreeTerms &&
-                    formData.agreeIndemnity
-                  );
-                }
-
-                return (
-                  <button
-                    key={sect.id}
-                    type="button"
-                    onClick={() => scrollToSection(sect.id)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all duration-300 focus:outline-none cursor-pointer ${
-                      isComplete 
-                        ? "bg-brand-red" 
-                        : "bg-gray-200 hover:bg-gray-300"
-                    } ${
-                      isActive 
-                        ? "scale-125 ring-2 ring-brand-red/30 ring-offset-1" 
-                        : "hover:scale-110"
-                    }`}
-                    title={`Go to ${sect.label} (${isComplete ? "Complete" : "Incomplete"})`}
-                    aria-label={`Scroll to ${sect.label}`}
-                  />
-                );
-              })}
+        {/* Official Footer with QR Code */}
+        <footer className="bg-slate-900 text-white mt-12 border-t border-slate-800">
+          <div className="max-w-7xl mx-auto px-6 py-10 md:px-12 grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
+            {/* Column 1: Brand & Description */}
+            <div className="space-y-3 text-center md:text-left">
+              <div className="flex items-center justify-center md:justify-start gap-2">
+                <span className="font-display font-black text-lg tracking-wider uppercase text-white">
+                  LEGENDS SOCCER <span className="text-brand-red">ACADEMY</span>
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 max-w-sm mx-auto md:mx-0 leading-relaxed">
+                Empowering young soccer athletes with world-class camp training, skill tracking, and professional development.
+              </p>
+              <div className="pt-1 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
+                © {new Date().getFullYear()} Legends Soccer Academy. All Rights Reserved.
+              </div>
             </div>
-            <span className="ml-4 text-[9px] uppercase font-bold text-gray-400 tracking-wider transition-all duration-300">
-              Step {
-                activeSection === "guardian-registration" ? "01: Parent / Guardian Registration" :
-                activeSection === "player-detail" ? "02: Player Detail" :
-                activeSection === "player-statistics" ? "03: Season Statistics" :
-                activeSection === "fees" ? "04: Fees & Payment" :
-                "05: Terms and Conditions"
-              }
-            </span>
+
+            {/* Column 2: QR Code to Registration Page */}
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4 bg-slate-800/80 p-4 rounded-2xl border border-slate-700/60 shadow-xl max-w-md mx-auto w-full">
+              <div className="p-2.5 bg-white rounded-xl shadow-md shrink-0 flex items-center justify-center">
+                <QRCodeSVG
+                  value="https://legendsacademy.co.za/"
+                  size={90}
+                  bgColor="#ffffff"
+                  fgColor="#0f172a"
+                  level="M"
+                />
+              </div>
+              <div className="text-center sm:text-left space-y-1">
+                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-brand-red/20 text-brand-red border border-brand-red/30 text-[9px] font-black uppercase tracking-wider">
+                  <QrCode size={11} /> Scan to Register
+                </div>
+                <h4 className="text-xs font-black text-white uppercase tracking-wider">Registration Page QR Code</h4>
+                <p className="text-[10px] text-slate-400 max-w-[200px] leading-snug">
+                  Scan with your smartphone camera to open and share this registration form instantly.
+                </p>
+              </div>
+            </div>
+
+            {/* Column 3: Quick Links & Social Icons */}
+            <div className="flex flex-col items-center md:items-end space-y-4">
+              <div className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-2 text-xs font-bold text-slate-300 uppercase tracking-wider">
+                <button
+                  type="button"
+                  onClick={handleLoadTestData}
+                  className="hover:text-brand-red transition-colors cursor-pointer text-slate-400 text-[10px]"
+                >
+                  Load Test Data
+                </button>
+                <a href="mailto:info@legendsacademy.co.za" className="hover:text-brand-red transition-colors">Contact Us</a>
+                <a href="#privacy" className="hover:text-brand-red transition-colors">Privacy Policy</a>
+                <a href="#terms" className="hover:text-brand-red transition-colors">Terms of Service</a>
+              </div>
+              
+              <div className="flex items-center space-x-4 text-slate-400">
+                <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-brand-red transition-colors p-2.5 bg-slate-800 rounded-xl border border-slate-700/80 hover:border-brand-red/50 shadow-sm" aria-label="Facebook">
+                  <Facebook size={15} />
+                </a>
+                <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-brand-red transition-colors p-2.5 bg-slate-800 rounded-xl border border-slate-700/80 hover:border-brand-red/50 shadow-sm" title="X" aria-label="Twitter X">
+                  <BespokeTwitterX size={15} />
+                </a>
+                <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-brand-red transition-colors p-2.5 bg-slate-800 rounded-xl border border-slate-700/80 hover:border-brand-red/50 shadow-sm" aria-label="Instagram">
+                  <Instagram size={15} />
+                </a>
+              </div>
+            </div>
           </div>
-          
-          <div className="flex items-center space-x-6">
-            <div className="hidden md:flex items-center space-x-6 text-[9px] uppercase font-bold text-gray-400 tracking-wider">
-              <button
-                type="button"
-                onClick={handleLoadTestData}
-                className="text-white hover:text-white transition-colors cursor-pointer select-none font-bold uppercase tracking-wider text-[9px] outline-none focus:outline-none"
-                title="Load Test Data (Easter Egg)"
-              >
-                Load Test Data
-              </button>
-              <a href="mailto:info@legendsacademy.co.za" className="hover:text-brand-red transition-colors">Contact Us</a>
-              <a href="#privacy" className="hover:text-brand-red transition-colors">Privacy Policy</a>
-              <a href="#terms" className="hover:text-brand-red transition-colors">Terms of Service</a>
+
+          {/* Bottom Progress Navigation Bar */}
+          <div className="h-12 bg-slate-950 border-t border-slate-800/80 px-6 md:px-12 flex items-center justify-between text-slate-400 text-[10px]">
+            <div className="flex items-center space-x-3">
+              <div className="flex space-x-2">
+                {[
+                  { id: "guardian-registration", step: "01", label: "Parent / Guardian Registration" },
+                  { id: "player-detail", step: "02", label: "Player Detail" },
+                  { id: "player-statistics", step: "03", label: "Season Statistics" },
+                  { id: "fees", step: "04", label: "Fees & Payment" },
+                  { id: "terms-conditions", step: "05", label: "Terms and Conditions" }
+                ].map((sect) => {
+                  const isActive = activeSection === sect.id;
+                  
+                  let isComplete = false;
+                  if (sect.id === "guardian-registration") {
+                    isComplete = !!(
+                      formData.firstName.trim() &&
+                      formData.surname.trim() &&
+                      (noEmail || (formData.email.trim() && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))) &&
+                      formData.identification.trim() &&
+                      (usePassport || /^\d{13}$/.test(formData.identification.replace(/\s/g, ""))) &&
+                      formData.cellphone.trim() &&
+                      formData.cellphone.replace(/\D/g, "").length >= 10 &&
+                      formData.doctorName.trim() &&
+                      formData.doctorContact.trim() &&
+                      formData.nextOfKin.trim()
+                    );
+                  } else if (sect.id === "player-detail") {
+                    isComplete = !!(
+                      formData.playerName.trim() &&
+                      formData.playerDob
+                    );
+                  } else if (sect.id === "player-statistics") {
+                    const g = formData.goals.toString().trim();
+                    const a = formData.assists.toString().trim();
+                    const m = formData.minutesPlayed.toString().trim();
+                    const isValidG = g === "" || !isNaN(Number(g));
+                    const isValidA = a === "" || !isNaN(Number(a));
+                    const isValidM = m === "" || !isNaN(Number(m));
+                    isComplete = isValidG && isValidA && isValidM;
+                  } else if (sect.id === "fees") {
+                    isComplete = !!(
+                      formData.selectedDays.length > 0
+                    );
+                  } else if (sect.id === "terms-conditions") {
+                    isComplete = !!(
+                      formData.agreeTerms &&
+                      formData.agreeIndemnity
+                    );
+                  }
+
+                  return (
+                    <button
+                      key={sect.id}
+                      type="button"
+                      onClick={() => scrollToSection(sect.id)}
+                      className={`w-2.5 h-2.5 rounded-full transition-all duration-300 focus:outline-none cursor-pointer ${
+                        isComplete 
+                          ? "bg-brand-red" 
+                          : "bg-slate-700 hover:bg-slate-600"
+                      } ${
+                        isActive 
+                          ? "scale-125 ring-2 ring-brand-red/40 ring-offset-1 ring-offset-slate-950" 
+                          : "hover:scale-110"
+                      }`}
+                      title={`Go to ${sect.label} (${isComplete ? "Complete" : "Incomplete"})`}
+                      aria-label={`Scroll to ${sect.label}`}
+                    />
+                  );
+                })}
+              </div>
+              <span className="ml-2 uppercase font-bold text-slate-400 tracking-wider">
+                Step {
+                  activeSection === "guardian-registration" ? "01: Guardian Registration" :
+                  activeSection === "player-detail" ? "02: Player Detail" :
+                  activeSection === "player-statistics" ? "03: Season Statistics" :
+                  activeSection === "fees" ? "04: Fees & Payment" :
+                  "05: Terms and Conditions"
+                }
+              </span>
             </div>
 
-            <div className="flex items-center space-x-6 text-gray-400 border-l border-gray-100 pl-6">
-              <a href="https://facebook.com" target="_blank" rel="noreferrer" className="hover:text-brand-red transition-colors">
-                <Facebook size={14} />
-              </a>
-              <a href="https://twitter.com" target="_blank" rel="noreferrer" className="hover:text-brand-red transition-colors" title="X">
-                <BespokeTwitterX size={14} />
-              </a>
-              <a href="https://instagram.com" target="_blank" rel="noreferrer" className="hover:text-brand-red transition-colors">
-                <Instagram size={14} />
-              </a>
+            <div className="hidden sm:flex items-center gap-2 text-slate-400 font-bold uppercase tracking-widest text-[9px]">
+              <QrCode size={12} className="text-brand-red" />
+              <span>Scan QR Code to Share Registration Page</span>
             </div>
           </div>
         </footer>
