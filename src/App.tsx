@@ -578,7 +578,7 @@ export default function App() {
       assists: String(Math.floor(Math.random() * 15)),
       minutesPlayed: String(Math.floor(Math.random() * 800) + 100),
       registrationType: Math.random() > 0.5 ? "weekly" : "daily",
-      selectedDays: ["14-17 JULY 09h00-12h00 - PAYMENT BY 13 JULY"],
+      selectedDays: ["29 Sept to Oct 09h00-12h00 - PAYMENT BY 27 SEPTEMBER"],
       proofOfPayment: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
       proofOfPaymentName: `${playerFirstName.toLowerCase()}_pop_receipt.png`,
       agreeIndemnity: true,
@@ -690,7 +690,7 @@ export default function App() {
 
     // --- Section 4: Camp & Sessions ---
     drawSectionTitle("4. CAMP SESSION DETAILS");
-    const s1 = drawField("Registration Type", data.registrationType === "weekly" ? "Weekly Package (R900)" : "Daily Package (R250/day)", 15);
+    const s1 = drawField("Registration Type", data.registrationType === "weekly" ? "Weekly Package (R900)" : "Daily Package (R300/day)", 15);
     const s2 = drawField("Proof of Payment Uploaded", data.proofOfPaymentName || "No file uploaded", 105);
     y += Math.max(s1, s2);
     
@@ -870,7 +870,7 @@ export default function App() {
           bodyFormData.append("Next of Kin", formData.nextOfKin);
           bodyFormData.append("Photo Consent", formData.socialConsent);
           bodyFormData.append("Comments", formData.comments || "None");
-          bodyFormData.append("Registration Type", formData.registrationType === "weekly" ? "Weekly (R900)" : "Daily (R250/day)");
+          bodyFormData.append("Registration Type", formData.registrationType === "weekly" ? "Weekly (R900)" : "Daily (R300/day)");
           bodyFormData.append("Selected Sessions of Attendance", (formData.selectedDays || []).join(", "));
           bodyFormData.append("Injury & Theft Indemnity Agreed", formData.agreeIndemnity ? "Yes (Agreed to Camp Policy)" : "No");
 
@@ -1266,7 +1266,7 @@ export default function App() {
                     </div>
                     <div className="bg-slate-50 p-2 rounded-lg border border-gray-100 text-center">
                       <p className="text-[9px] text-gray-400 uppercase font-black tracking-wider">Daily Rate</p>
-                      <p className="text-xl font-display font-black text-slate-900 mt-0.5">R250</p>
+                      <p className="text-xl font-display font-black text-slate-900 mt-0.5">R300</p>
                     </div>
                   </div>
 
@@ -1896,7 +1896,7 @@ export default function App() {
                         className="accent-brand-red h-4 w-4"
                       />
                     </div>
-                    <span className="text-xl font-display font-black text-slate-900">R250 <span className="text-[10px] text-gray-400 font-sans font-normal">/ day</span></span>
+                    <span className="text-xl font-display font-black text-slate-900">R300 <span className="text-[10px] text-gray-400 font-sans font-normal">/ day</span></span>
                     <span className="text-[9.5px] text-gray-500 mt-1">Select specific days below. Includes lunches & refreshments for selected days.</span>
                   </label>
                 </div>
@@ -1905,19 +1905,13 @@ export default function App() {
               {/* Day selection checkboxes */}
               <div className="col-span-1 md:col-span-2 flex flex-col">
                 <label className="artistic-label mb-2">Days of Attendance (Select Session)</label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-1">
+                <div className="grid grid-cols-1 gap-4 mt-1">
                   {[
                     { 
                       id: "Session 1", 
-                      label: "14-17 JULY 09h00-12h00", 
-                      deadline: "PAYMENT BY 13 JULY", 
-                      value: "14-17 JULY 09h00-12h00 - PAYMENT BY 13 JULY" 
-                    },
-                    { 
-                      id: "Session 2", 
-                      label: "20-23 JULY 09h00-12h00", 
-                      deadline: "PAYMENT BY 16 JULY", 
-                      value: "20-23 JULY 09h00-12h00 - PAYMENT BY 16 JULY" 
+                      label: "29 Sept to Oct 09h00-12h00", 
+                      deadline: "PAYMENT BY 27 SEPTEMBER", 
+                      value: "29 Sept to Oct 09h00-12h00 - PAYMENT BY 27 SEPTEMBER" 
                     }
                   ].map((session) => {
                     const isSelected = formData.selectedDays.includes(session.value);
