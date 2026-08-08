@@ -2073,8 +2073,19 @@ export default function App() {
               <p className="text-xs text-slate-400 max-w-sm mx-auto md:mx-0 leading-relaxed">
                 Empowering young soccer athletes with world-class camp training, skill tracking, and professional development.
               </p>
-              <div className="pt-1 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-                © {new Date().getFullYear()} Legends Soccer Academy. All Rights Reserved.
+              <div className="pt-1 text-[10px] text-slate-500 font-bold uppercase tracking-wider space-y-1">
+                <div>© {new Date().getFullYear()} Legends Soccer Academy. All Rights Reserved.</div>
+                <div className="text-slate-400 font-normal normal-case">
+                  Developed by{" "}
+                  <a
+                    href="https://wonderlandstudio.co.za/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-slate-300 hover:text-brand-red transition-colors underline font-medium"
+                  >
+                    Wonderland Studio
+                  </a>
+                </div>
               </div>
             </div>
 
