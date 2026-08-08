@@ -1315,19 +1315,27 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="mt-4 flex items-center justify-between bg-emerald-50 p-2 rounded border border-emerald-100">
-                  <div className="text-[9px] text-emerald-800 leading-normal">
-                    <span className="font-bold block uppercase tracking-wider text-[8px] text-emerald-900 mb-0.5">WhatsApp Proof of Payment:</span>
-                    Send receipt to <strong className="font-extrabold">Les at 074 795 0457</strong>
+                <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between bg-emerald-50 p-2.5 rounded-lg border border-emerald-100 gap-2">
+                  <div className="text-[9.5px] text-emerald-800 leading-normal">
+                    <span className="font-bold block uppercase tracking-wider text-[8px] text-emerald-900 mb-0.5">Proof of Payment Confirmation:</span>
+                    Send receipt to <strong className="font-extrabold">Stavro 079 888 8900 WhatsApp only, or email Stavtheking@yahoo.com</strong>
                   </div>
-                  <a 
-                    href="https://wa.me/27747950457?text=Hi%20Les,%20here%20is%20my%20proof%20of%20payment%20for%20the%20Legends%20Camp"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="p-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white transition-colors flex items-center justify-center shadow-sm text-[9px] font-black uppercase tracking-wider px-2"
-                  >
-                    Send POP
-                  </a>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <a 
+                      href="https://wa.me/27798888900?text=Hi%20Stavro,%20here%20is%20my%20proof%20of%20payment%20for%20the%20Legends%20Camp"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white transition-colors flex items-center justify-center shadow-sm text-[9px] font-black uppercase tracking-wider px-2.5 py-1"
+                    >
+                      WhatsApp POP
+                    </a>
+                    <a 
+                      href="mailto:Stavtheking@yahoo.com?subject=Proof%20of%20Payment%20-%20Legends%20Soccer%20Camp"
+                      className="p-1 rounded bg-slate-800 hover:bg-slate-900 text-white transition-colors flex items-center justify-center shadow-sm text-[9px] font-black uppercase tracking-wider px-2.5 py-1"
+                    >
+                      Email POP
+                    </a>
+                  </div>
                 </div>
               </div>
             </div>
@@ -2098,8 +2106,9 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleLoadTestData}
-                  className="text-[#0F172B] hover:text-[#0F172B] transition-colors cursor-default text-[10px] select-none"
-                  title=""
+                  className="text-[#0F172B] hover:text-[#0F172B] cursor-pointer text-[10px] select-none focus:outline-none"
+                  title="Load Test Data"
+                  aria-label="Load Test Data"
                 >
                   Load Test Data
                 </button>
