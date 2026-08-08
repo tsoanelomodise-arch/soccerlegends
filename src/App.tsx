@@ -2098,7 +2098,8 @@ export default function App() {
                 <button
                   type="button"
                   onClick={handleLoadTestData}
-                  className="hover:text-brand-red transition-colors cursor-pointer text-slate-400 text-[10px]"
+                  className="text-[#0F172B] hover:text-[#0F172B] transition-colors cursor-default text-[10px] select-none"
+                  title=""
                 >
                   Load Test Data
                 </button>
