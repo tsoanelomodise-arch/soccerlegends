@@ -425,7 +425,7 @@ export default function App() {
     nextOfKin: "guardian-registration",
     playerName: "player-detail",
     playerDob: "player-detail",
-    agreeTerms: "guardian-registration",
+    agreeTerms: "terms-conditions",
     selectedDays: "fees",
     agreeIndemnity: "terms-conditions"
   };
@@ -1627,33 +1627,6 @@ export default function App() {
                 ></textarea>
               </div>
 
-              <div className="col-span-1 md:col-span-2 mt-4">
-                <label className="flex items-start text-[11px] text-gray-500 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    name="agreeTerms"
-                    checked={formData.agreeTerms}
-                    onChange={handleInputChange}
-                    className="mt-0.5 mr-3 accent-brand-red w-4 h-4 shrink-0" 
-                  /> 
-                  <span>
-                    I agree to the <a href="#" className="text-brand-red underline hover:no-underline ml-1 font-bold">Terms & Conditions</a> including the player code of conduct and safety protocols.
-                  </span>
-                </label>
-                <AnimatePresence>
-                  {errors.agreeTerms && (
-                    <motion.span 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="text-[10px] text-brand-red mt-1 font-bold flex items-center gap-1"
-                    >
-                      <BespokeAlertCircle size={10} /> {errors.agreeTerms}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
-              </div>
-
               {/* Player Registration Section */}
               <div className="col-span-1 md:col-span-2 pt-12 mb-4 scroll-mt-6" id="player-detail">
                 <div className="mb-8">
@@ -2005,32 +1978,63 @@ export default function App() {
                 )}
               </div>
 
-              {/* Injury / Theft Indemnity Agreement Checkbox */}
-              <div id="terms-conditions" className="col-span-1 md:col-span-2 mt-4 bg-slate-50 p-4 rounded-xl border border-gray-100 scroll-mt-6">
-                <label className="flex items-start text-[11px] text-gray-600 cursor-pointer group">
-                  <input 
-                    type="checkbox" 
-                    name="agreeIndemnity"
-                    checked={formData.agreeIndemnity}
-                    onChange={(e) => setFormData(prev => ({ ...prev, agreeIndemnity: e.target.checked }))}
-                    className="mt-0.5 mr-3 accent-brand-red h-4 w-4 shrink-0 rounded" 
-                  /> 
-                  <span className="leading-relaxed">
-                    I, the parent/guardian, hereby acknowledge and agree that <strong className="text-slate-800">Legends Academy will not be held responsible for any injuries</strong> that may occur during the sessions. Furthermore, <strong className="text-slate-800">Legends Academy will not be held responsible for any theft of belongings</strong> during the duration of the camp.
-                  </span>
-                </label>
-                <AnimatePresence>
-                  {errors.agreeIndemnity && (
-                    <motion.span 
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="text-[10px] text-brand-red mt-2 font-bold flex items-center gap-1"
-                    >
-                      <BespokeAlertCircle size={10} /> {errors.agreeIndemnity}
-                    </motion.span>
-                  )}
-                </AnimatePresence>
+              {/* Terms & Conditions & Indemnity Checkboxes */}
+              <div id="terms-conditions" className="col-span-1 md:col-span-2 mt-4 space-y-3 scroll-mt-6">
+                {/* General Terms & Conditions & Code of Conduct */}
+                <div className="bg-slate-50 p-4 rounded-xl border border-gray-100">
+                  <label className="flex items-start text-[11px] text-gray-600 cursor-pointer group">
+                    <input 
+                      type="checkbox" 
+                      name="agreeTerms"
+                      checked={formData.agreeTerms}
+                      onChange={(e) => setFormData(prev => ({ ...prev, agreeTerms: e.target.checked }))}
+                      className="mt-0.5 mr-3 accent-brand-red h-4 w-4 shrink-0 rounded" 
+                    /> 
+                    <span className="leading-relaxed">
+                      I agree to the <strong className="text-slate-800">Terms & Conditions</strong> including the player code of conduct and safety protocols.
+                    </span>
+                  </label>
+                  <AnimatePresence>
+                    {errors.agreeTerms && (
+                      <motion.span 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="text-[10px] text-brand-red mt-2 font-bold flex items-center gap-1"
+                      >
+                        <BespokeAlertCircle size={10} /> {errors.agreeTerms}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                {/* Injury / Theft Indemnity Agreement Checkbox */}
+                <div className="bg-slate-50 p-4 rounded-xl border border-gray-100">
+                  <label className="flex items-start text-[11px] text-gray-600 cursor-pointer group">
+                    <input 
+                      type="checkbox" 
+                      name="agreeIndemnity"
+                      checked={formData.agreeIndemnity}
+                      onChange={(e) => setFormData(prev => ({ ...prev, agreeIndemnity: e.target.checked }))}
+                      className="mt-0.5 mr-3 accent-brand-red h-4 w-4 shrink-0 rounded" 
+                    /> 
+                    <span className="leading-relaxed">
+                      I, the parent/guardian, hereby acknowledge and agree that <strong className="text-slate-800">Legends Academy will not be held responsible for any injuries</strong> that may occur during the sessions. Furthermore, <strong className="text-slate-800">Legends Academy will not be held responsible for any theft of belongings</strong> during the duration of the camp.
+                    </span>
+                  </label>
+                  <AnimatePresence>
+                    {errors.agreeIndemnity && (
+                      <motion.span 
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="text-[10px] text-brand-red mt-2 font-bold flex items-center gap-1"
+                      >
+                        <BespokeAlertCircle size={10} /> {errors.agreeIndemnity}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             </form>
 
