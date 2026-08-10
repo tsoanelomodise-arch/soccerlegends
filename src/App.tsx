@@ -578,7 +578,7 @@ export default function App() {
       assists: String(Math.floor(Math.random() * 15)),
       minutesPlayed: String(Math.floor(Math.random() * 800) + 100),
       registrationType: Math.random() > 0.5 ? "weekly" : "daily",
-      selectedDays: ["29 Sept to Oct 09h00-12h00 - PAYMENT BY 27 SEPTEMBER"],
+      selectedDays: ["29 Sept to 2 Oct (09h00-12h00) - PAYMENT BY 27 SEPTEMBER"],
       proofOfPayment: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
       proofOfPaymentName: `${playerFirstName.toLowerCase()}_pop_receipt.png`,
       agreeIndemnity: true,
@@ -1890,9 +1890,9 @@ export default function App() {
                   {[
                     { 
                       id: "Session 1", 
-                      label: "29 Sept to Oct 09h00-12h00", 
+                      label: "29 Sept to 2 Oct (09h00-12h00)", 
                       deadline: "PAYMENT BY 27 SEPTEMBER", 
-                      value: "29 Sept to Oct 09h00-12h00 - PAYMENT BY 27 SEPTEMBER" 
+                      value: "29 Sept to 2 Oct (09h00-12h00) - PAYMENT BY 27 SEPTEMBER" 
                     }
                   ].map((session) => {
                     const isSelected = formData.selectedDays.includes(session.value);
