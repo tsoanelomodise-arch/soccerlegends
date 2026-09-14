@@ -1181,8 +1181,8 @@ export default function App() {
         <div id="form-scroll-container" className="flex-1 overflow-y-auto p-8 md:p-12 relative">
           <div className="max-w-3xl mx-auto mb-16">
 
-            {/* Camp Information & Banking Details Dashboard */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
+            {/* Camp Information & Provisions Dashboard */}
+            <div className="mb-12">
               {/* Card 1: Camp Essentials & Provision */}
               <div style={{ backgroundColor: "#1F1F1F" }} className="text-white rounded-xl p-6 shadow-md border border-zinc-900 relative overflow-hidden flex flex-col justify-between">
                 {/* Background decorative texture with brand red */}
@@ -1196,7 +1196,7 @@ export default function App() {
                   <div className="space-y-4">
                     <div>
                       <h4 className="text-[10px] uppercase tracking-wider text-brand-red font-black mb-1.5">Legends Will Provide:</h4>
-                      <ul className="grid grid-cols-2 gap-y-1 gap-x-2 text-[11px] text-neutral-300">
+                      <ul className="grid grid-cols-2 sm:grid-cols-3 gap-y-1.5 gap-x-3 text-[11px] text-neutral-300">
                         <li className="flex items-center gap-1.5">
                           <span className="text-emerald-400 font-bold">✓</span> Water + Refills
                         </li>
@@ -1215,7 +1215,7 @@ export default function App() {
                         <li className="flex items-center gap-1.5">
                           <span className="text-emerald-400 font-bold">✓</span> Coldrink at end
                         </li>
-                        <li className="flex items-center col-span-2 gap-1.5 mt-0.5 bg-brand-red/10 border border-brand-red/20 px-2 py-0.5 rounded text-neutral-100 font-semibold">
+                        <li className="flex items-center col-span-2 sm:col-span-3 gap-1.5 mt-0.5 bg-brand-red/10 border border-brand-red/20 px-2.5 py-1 rounded text-neutral-100 font-semibold">
                           <span className="text-brand-red font-black">★</span> Prepared Lunch Provided
                         </li>
                       </ul>
@@ -1223,9 +1223,15 @@ export default function App() {
 
                     <div className="border-t border-neutral-800 pt-3">
                       <h4 className="text-[10px] uppercase tracking-wider text-amber-500 font-black mb-1.5">What to Bring Along:</h4>
-                      <ul className="grid grid-cols-2 gap-y-1 gap-x-2 text-[11px] text-neutral-300">
+                      <ul className="grid grid-cols-2 sm:grid-cols-4 gap-y-1.5 gap-x-3 text-[11px] text-neutral-300">
                         <li className="flex items-center gap-1.5">
                           <span className="text-amber-500 font-bold">•</span> Shin Pads
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-amber-500 font-bold">•</span> Football Boots
+                        </li>
+                        <li className="flex items-center gap-1.5">
+                          <span className="text-amber-500 font-bold">•</span> Goalkeeper Gloves
                         </li>
                         <li className="flex items-center gap-1.5">
                           <span className="text-amber-500 font-bold">•</span> Cap / Hat
@@ -1246,96 +1252,6 @@ export default function App() {
 
                 <div className="mt-4 text-[9px] text-neutral-400 italic bg-neutral-950/60 p-2 rounded border border-neutral-800">
                   Please pack what is required to ensure your child remains protected and warm.
-                </div>
-              </div>
-
-              {/* Card 2: Tuition Fees & Bank Details */}
-              <div className="bg-white rounded-xl p-6 shadow-md border border-gray-100 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-display font-bold text-xs tracking-wider uppercase text-gray-800">Fees & Secure Banking</h3>
-                    </div>
-                  </div>
-
-                  {/* Pricing Tiers */}
-                  <div className="grid grid-cols-2 gap-3 mb-4">
-                    <div className="bg-slate-50 p-2 rounded-lg border border-gray-100 text-center">
-                      <p className="text-[9px] text-gray-400 uppercase font-black tracking-wider">Full Week</p>
-                      <p className="text-xl font-display font-black text-slate-900 mt-0.5">R900</p>
-                    </div>
-                    <div className="bg-slate-50 p-2 rounded-lg border border-gray-100 text-center">
-                      <p className="text-[9px] text-gray-400 uppercase font-black tracking-wider">Daily Rate</p>
-                      <p className="text-xl font-display font-black text-slate-900 mt-0.5">R300</p>
-                    </div>
-                  </div>
-
-                  {/* Banking specifications */}
-                  <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-gray-100 relative group">
-                    <button 
-                      type="button"
-                      onClick={() => copyToClipboard("63206821034")}
-                      className="absolute top-2 right-2 p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-all focus:outline-none"
-                      title="Copy Account Number"
-                    >
-                      {copied ? (
-                        <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200">Copied</span>
-                      ) : (
-                        <BespokeCopy size={13} />
-                      )}
-                    </button>
-
-                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Bank details</p>
-                    <div className="grid grid-cols-2 gap-y-1.5 gap-x-2 text-[11px] text-slate-700 font-medium">
-                      <div>
-                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Bank</span>
-                        <strong className="text-slate-800">FNB</strong>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Account Name</span>
-                        <strong className="text-slate-800 text-xs font-bold">Academy of Legends NPC</strong>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Account Number</span>
-                        <strong className="text-brand-red text-sm font-mono tracking-wide select-all font-black">63206821034</strong>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Account Type</span>
-                        <strong className="text-slate-800">Cheque Account</strong>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Branch / Code</span>
-                        <strong className="text-slate-800">Olympus / 250655</strong>
-                      </div>
-                      <div>
-                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Payment Reference</span>
-                        <strong className="text-slate-800 uppercase text-[10px]">Child's Name & Surname</strong>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between bg-emerald-50 p-2.5 rounded-lg border border-emerald-100 gap-2">
-                  <div className="text-[9.5px] text-emerald-800 leading-normal">
-                    <span className="font-bold block uppercase tracking-wider text-[8px] text-emerald-900 mb-0.5">Proof of Payment Confirmation:</span>
-                    Send receipt to <strong className="font-extrabold">Stavro 079 888 8900 WhatsApp only, or email Stavtheking@yahoo.com</strong>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <a 
-                      href="https://wa.me/27798888900?text=Hi%20Stavro,%20here%20is%20my%20proof%20of%20payment%20for%20the%20Legends%20Camp"
-                      target="_blank"
-                      rel="noreferrer"
-                      className="p-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white transition-colors flex items-center justify-center shadow-sm text-[9px] font-black uppercase tracking-wider px-2.5 py-1"
-                    >
-                      WhatsApp POP
-                    </a>
-                    <a 
-                      href="mailto:Stavtheking@yahoo.com?subject=Proof%20of%20Payment%20-%20Legends%20Soccer%20Camp"
-                      className="p-1 rounded bg-slate-800 hover:bg-slate-900 text-white transition-colors flex items-center justify-center shadow-sm text-[9px] font-black uppercase tracking-wider px-2.5 py-1"
-                    >
-                      Email POP
-                    </a>
-                  </div>
                 </div>
               </div>
             </div>
@@ -1984,6 +1900,96 @@ export default function App() {
                     <BespokeAlertCircle size={10} /> {errors.proofOfPayment}
                   </span>
                 )}
+              </div>
+
+              {/* Fees & Secure Banking Section */}
+              <div className="col-span-1 md:col-span-2 bg-white rounded-xl p-6 shadow-md border border-gray-100 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display font-bold text-xs tracking-wider uppercase text-gray-800">Fees & Secure Banking</h3>
+                    </div>
+                  </div>
+
+                  {/* Pricing Tiers */}
+                  <div className="grid grid-cols-2 gap-3 mb-4">
+                    <div className="bg-slate-50 p-2 rounded-lg border border-gray-100 text-center">
+                      <p className="text-[9px] text-gray-400 uppercase font-black tracking-wider">Full Week</p>
+                      <p className="text-xl font-display font-black text-slate-900 mt-0.5">R900</p>
+                    </div>
+                    <div className="bg-slate-50 p-2 rounded-lg border border-gray-100 text-center">
+                      <p className="text-[9px] text-gray-400 uppercase font-black tracking-wider">Daily Rate</p>
+                      <p className="text-xl font-display font-black text-slate-900 mt-0.5">R300</p>
+                    </div>
+                  </div>
+
+                  {/* Banking specifications */}
+                  <div className="space-y-2 bg-slate-50 p-3 rounded-lg border border-gray-100 relative group">
+                    <button 
+                      type="button"
+                      onClick={() => copyToClipboard("63206821034")}
+                      className="absolute top-2 right-2 p-1.5 rounded-md hover:bg-gray-200 text-gray-400 hover:text-gray-600 transition-all focus:outline-none cursor-pointer"
+                      title="Copy Account Number"
+                    >
+                      {copied ? (
+                        <span className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest bg-emerald-50 px-1 py-0.5 rounded border border-emerald-200">Copied</span>
+                      ) : (
+                        <BespokeCopy size={13} />
+                      )}
+                    </button>
+
+                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">Bank details</p>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-2 text-[11px] text-slate-700 font-medium">
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Bank</span>
+                        <strong className="text-slate-800">FNB</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Account Name</span>
+                        <strong className="text-slate-800 text-xs font-bold">Academy of Legends NPC</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Account Number</span>
+                        <strong className="text-brand-red text-sm font-mono tracking-wide select-all font-black">63206821034</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Account Type</span>
+                        <strong className="text-slate-800">Cheque Account</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Branch / Code</span>
+                        <strong className="text-slate-800">Olympus / 250655</strong>
+                      </div>
+                      <div>
+                        <span className="text-[9px] text-gray-400 uppercase block leading-none font-bold">Payment Reference</span>
+                        <strong className="text-slate-800 uppercase text-[10px]">Child's Name & Surname</strong>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between bg-emerald-50 p-2.5 rounded-lg border border-emerald-100 gap-2">
+                  <div className="text-[9.5px] text-emerald-800 leading-normal">
+                    <span className="font-bold block uppercase tracking-wider text-[8px] text-emerald-900 mb-0.5">Proof of Payment Confirmation:</span>
+                    Send receipt to <strong className="font-extrabold">Stavro 079 888 8900 WhatsApp only, or email Stavtheking@yahoo.com</strong>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <a 
+                      href="https://wa.me/27798888900?text=Hi%20Stavro,%20here%20is%20my%20proof%20of%20payment%20for%20the%20Legends%20Camp"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="p-1 rounded bg-emerald-600 hover:bg-emerald-700 text-white transition-colors flex items-center justify-center shadow-sm text-[9px] font-black uppercase tracking-wider px-2.5 py-1"
+                    >
+                      WhatsApp POP
+                    </a>
+                    <a 
+                      href="mailto:Stavtheking@yahoo.com?subject=Proof%20of%20Payment%20-%20Legends%20Soccer%20Camp"
+                      className="p-1 rounded bg-slate-800 hover:bg-slate-900 text-white transition-colors flex items-center justify-center shadow-sm text-[9px] font-black uppercase tracking-wider px-2.5 py-1"
+                    >
+                      Email POP
+                    </a>
+                  </div>
+                </div>
               </div>
 
               {/* Terms & Conditions & Indemnity Checkboxes */}
